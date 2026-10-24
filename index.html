@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+/* ── SIDEBAR OVERRIDE ── */
+.sidebar {
+  position: fixed !important; top: 0 !important; left: 0 !important;
+  height: 100% !important; width: 220px !important;
+  background: #1A1A1A !important; z-index: 100 !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1) !important;
+  overflow: hidden !important; display: flex !important; flex-direction: column !important;
+}
+.sidebar.open { transform: translateX(0) !important; overflow: visible !important; }
+.sidebar:not(.open) .logo-text,
+.sidebar:not(.open) .nav-section-label,
+.sidebar:not(.open) .nav-item span,
+.sidebar:not(.open) .user-info,
+.sidebar:not(.open) #logoutMenu { display: none !important; }
+.sidebar.open .logo-text,
+.sidebar.open .nav-section-label,
+.sidebar.open .nav-item span,
+.sidebar.open .user-info { display: block !important; }
+.sidebar.open .nav-item { justify-content: flex-start !important; padding: 10px 12px !important; }
+.sidebar.open .sidebar-user { justify-content: flex-start !important; }
+.sidebar.open .sidebar-logo { justify-content: flex-start !important; padding: 22px 20px !important; }
+.main-content { width: 100% !important; margin-left: 0 !important; }
+.top-header { padding-left: 66px !important; }
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; backdrop-filter: blur(2px); }
+.sidebar-backdrop.show { display: block; }
+#sidebarToggle {
+  display: flex !important; visibility: visible !important; opacity: 1 !important;
+  position: fixed !important; top: 14px !important; left: 14px !important;
+  z-index: 999999 !important; width: 42px !important; height: 42px !important;
+  border-radius: 10px !important; background: #1A1A1A !important;
+  border: none !important; cursor: pointer !important;
+  flex-direction: column !important; align-items: center !important;
+  justify-content: center !important; gap: 5px !important;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4) !important; padding: 0 !important;
+}
+#sidebarToggle span {
+  display: block !important; width: 20px !important; height: 2px !important;
+  background: #C8A96E !important; border-radius: 2px !important; transition: 0.22s !important;
+}
+#sidebarToggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg) !important; }
+#sidebarToggle.open span:nth-child(2) { opacity: 0 !important; }
+#sidebarToggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg) !important; }
+
+/* ── BEBAS NEUE for headings ── */
+.top-header h1, .panel-title, .cat-section-label,
+.strip-value, .stat-value, .card-value {
+  font-family: 'Bebas Neue', sans-serif !important;
+  font-weight: 400 !important;
+}
+.top-header h1 { font-size: 24px !important; letter-spacing: 2px !important; }
+</style>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order System — Padayon Kapetid POS</title>
+  <link rel="stylesheet" href="css/style.css?v=20260332">
+  <style>
+  /* ══════════════════════════════════════════════════════════════
+     LAYOUT REDESIGN — Moto-shop arrangement, coffee shop colors
+     ══════════════════════════════════════════════════════════════ */
+
+  /* ── HERO BANNER ────────────────────────────────────────────── */
+
+  /* menu-section must allow overflow so images pop out of banner */
+  .menu-section {
+    overflow-x: hidden !important; /* clip sides but not vertically */
+  }
+
+  .hero-banner-wrap {
+    position: relative;
+    margin-bottom: 36px; /* extra space for overflowing images */
+    flex-shrink: 0;
+  }
+
+  .hero-banner {
+    border-radius: 18px;
+    overflow: hidden;         /* clip inside the card */
+    position: relative;
+    background: var(--primary);
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    padding: 0 200px;         /* wide padding so text doesn't go under images */
+  }
+
+  /* diagonal stripe pattern */
+  .hero-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -55deg,
+      rgba(200,169,110,0.04) 0px, rgba(200,169,110,0.04) 20px,
+      transparent 20px, transparent 38px
+    );
+    pointer-events: none;
+  }
+
+  /* subtle radial glow center */
+  .hero-banner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, rgba(200,169,110,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── overflow item images — positioned OUTSIDE the banner card ── */
+  .hero-img-left,
+  .hero-img-right {
+    position: absolute;
+    bottom: -18px;   /* hangs below the banner bottom */
+    z-index: 10;
+    pointer-events: none;
+    filter: drop-shadow(0 12px 28px rgba(26,20,10,0.35));
+    transition: transform 0.4s ease;
+  }
+  .hero-img-left {
+    left: -10px;
+    width: 220px;
+    transform: rotate(-6deg) translateY(0px);
+    transform-origin: bottom left;
+  }
+  .hero-img-right {
+    right: -10px;
+    width: 220px;
+    transform: rotate(6deg) translateY(0px);
+    transform-origin: bottom right;
+  }
+  .hero-banner-wrap:hover .hero-img-left  { transform: rotate(-4deg) translateY(-6px); }
+  .hero-banner-wrap:hover .hero-img-right { transform: rotate( 4deg) translateY(-6px); }
+
+  .hero-left {
+    flex: 1;
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+  .hero-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+  .hero-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 2px;
+    color: #fff;
+    line-height: 1.05;
+  }
+  .hero-headline span { color: var(--accent); }
+  .hero-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 6px;
+    font-weight: 400;
+  }
+  .hero-right {
+    position: absolute;
+    right: 220px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: flex;
+    gap: 10px;
+  }
+  .hero-stat {
+    text-align: center;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(200,169,110,0.1);
+    border: 1px solid rgba(200,169,110,0.2);
+    min-width: 72px;
+  }
+  .hero-stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    line-height: 1;
+    display: block;
+  }
+  .hero-stat-lbl {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.35);
+    display: block;
+    margin-top: 3px;
+  }
+
+  /* ── CATEGORY ROW — brand-logo chip style ────────────────────── */
+  .cat-brand-row {
+    display: flex;
+    flex-wrap: nowrap;          /* force single row always */
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding: 0 0 10px;
+    flex-shrink: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    align-items: center;
+    /* fade edges to hint scrollability */
+    -webkit-mask-image: linear-gradient(to right, transparent 0px, black 16px, black calc(100% - 16px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0px, black 16px, black calc(100% - 16px), transparent 100%);
+  }
+  .cat-brand-row::-webkit-scrollbar { height: 3px; }
+  .cat-brand-row::-webkit-scrollbar-track { background: transparent; }
+  .cat-brand-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .cat-chip {
+    flex-shrink: 0;
+    flex-grow: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    transition: var(--t);
+    white-space: nowrap;
+  }
+  .cat-chip-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-main);
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .cat-chip-img img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+  }
+  .cat-chip-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-mid);
+    letter-spacing: 0.3px;
+  }
+  .cat-chip:hover {
+    border-color: var(--accent);
+    background: rgba(200,169,110,0.05);
+  }
+  .cat-chip:hover .cat-chip-label { color: var(--primary); }
+  .cat-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  .cat-chip.active .cat-chip-label { color: var(--accent); }
+  .cat-chip.active .cat-chip-img {
+    border-color: rgba(200,169,110,0.4);
+    background: rgba(200,169,110,0.1);
+  }
+
+  /* ── SECTION HEADER row with label + count ───────────────────── */
+  .grid-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  .grid-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--text-dark);
+    line-height: 1;
+  }
+  .grid-section-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-light);
+    background: var(--bg-main);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 1px 9px;
+  }
+  .grid-section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── FOOD CARD — full image, overlay text ───────────────────── */
+  .food-card {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    border: 1.5px solid var(--border) !important;
+    cursor: pointer !important;
+    transition: var(--t) !important;
+    position: relative !important;
+    aspect-ratio: 3 / 4 !important;   /* portrait card */
+    background: var(--bg-main) !important;
+  }
+  .food-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 14px 36px rgba(26,20,10,0.18) !important;
+    border-color: var(--accent) !important;
+  }
+  .food-card.in-order { border-color: var(--primary) !important; }
+
+  /* Full-bleed image fills entire card */
+  .food-card-img {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    transition: transform 0.35s ease !important;
+  }
+  .food-card:hover .food-card-img { transform: scale(1.07) !important; }
+
+  .food-card-img-placeholder {
+    position: absolute !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 52px !important;
+    background: linear-gradient(135deg, var(--bg-main) 0%, var(--border) 100%) !important;
+    opacity: 0.7 !important;
+  }
+
+  /* Dark gradient overlay — bottom heavy so text is readable */
+  .food-card::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(
+      to bottom,
+      rgba(26,20,10,0)   0%,
+      rgba(26,20,10,0)   40%,
+      rgba(26,20,10,0.55) 68%,
+      rgba(26,20,10,0.88) 100%
+    ) !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+    transition: opacity 0.25s !important;
+  }
+  .food-card:hover::before { opacity: 0.85 !important; }
+
+  /* Category badge — top left */
+  .food-card-label {
+    position: absolute !important;
+    top: 10px !important;
+    left: 10px !important;
+    z-index: 4 !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    color: var(--text-dark) !important;
+    background: rgba(245,240,232,0.92) !important;
+    backdrop-filter: blur(6px) !important;
+    padding: 3px 8px !important;
+    border-radius: 5px !important;
+  }
+
+  /* Qty badge — top right */
+  .food-card-qty-badge {
+    position: absolute !important;
+    top: 10px !important; right: 10px !important;
+    z-index: 5 !important;
+    background: var(--primary) !important;
+    color: var(--accent) !important;
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 14px !important;
+    width: 28px !important; height: 28px !important;
+    border-radius: 50% !important;
+    display: none !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+  }
+  .food-card.in-order .food-card-qty-badge { display: flex !important; }
+
+  /* Text content — stacked at bottom over the gradient */
+  .food-card-body {
+    position: absolute !important;
+    bottom: 0 !important; left: 0 !important; right: 0 !important;
+    z-index: 3 !important;
+    padding: 0 12px 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+  .food-card-name {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    line-height: 1.25 !important;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5) !important;
+  }
+  .food-card-desc {
+    font-size: 10px !important;
+    color: rgba(255,255,255,0.6) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 2px !important;
+  }
+  .food-card-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-top: 6px !important;
+    padding-bottom: 12px !important;
+  }
+  .food-card-price {
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 18px !important;
+    color: var(--accent) !important;
+    letter-spacing: 0.5px !important;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+  }
+
+  /* ADD TO CART — full width button at bottom */
+  .add-btn-wrap { padding: 0 12px 12px; position: relative; z-index: 3; }
+  .add-btn-full {
+    width: 100%; padding: 8px 0;
+    border-radius: 8px;
+    background: var(--primary);
+    color: var(--accent);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px; letter-spacing: 2px;
+    transition: var(--t); border: none; cursor: pointer;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.2s, transform 0.2s, background 0.18s !important;
+  }
+  .food-card:hover .add-btn-full {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+  .food-card.in-order .add-btn-full {
+    opacity: 1 !important; transform: translateY(0) !important;
+    background: var(--accent) !important; color: var(--primary) !important;
+  }
+  .add-btn-full:hover { background: var(--accent) !important; color: var(--primary) !important; }
+  .add-btn { display: none !important; }
+
+  /* ── MENU GRID — 4 cols preferred ───────────────────────────── */
+  .menu-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  /* ── FULL-IMAGE CARD OVERLAY ELEMENTS ───────────────────────── */
+  .fc-img-wrap {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+  }
+  .fc-img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+    display: block; transition: transform 0.35s ease;
+  }
+  .food-card:hover .fc-img { transform: scale(1.07); }
+  .fc-img-fallback {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px;
+    background: linear-gradient(135deg, var(--bg-main) 0%, var(--border) 100%);
+  }
+  .fc-overlay {
+    position: absolute; inset: 0; z-index: 3;
+    display: flex; flex-direction: column; justify-content: space-between;
+    background: linear-gradient(to bottom,
+      rgba(26,20,10,0) 0%, rgba(26,20,10,0) 38%,
+      rgba(26,20,10,0.55) 65%, rgba(26,20,10,0.92) 100%);
+    pointer-events: none;
+  }
+  .fc-overlay-top { padding: 8px 8px 0; }
+  .fc-cat {
+    display: inline-block; font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px; color: #fff;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+    padding: 3px 8px; border-radius: 5px;
+  }
+  .fc-overlay-bottom { padding: 0 10px 10px; pointer-events: all; }
+  .fc-name {
+    font-size: 13px; font-weight: 700; color: #fff;
+    line-height: 1.25; margin-bottom: 6px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  }
+  .fc-row { display: flex; align-items: center; justify-content: space-between; }
+  .fc-price {
+    font-family: 'Bebas Neue', sans-serif; font-size: 17px;
+    letter-spacing: 0.5px; color: var(--accent);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+  .fc-add-btn {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--accent); color: var(--primary);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; font-weight: 700; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer; transition: var(--t); flex-shrink: 0;
+  }
+  .fc-add-btn:hover { background: #fff; transform: scale(1.1); }
+  .food-card.in-order .fc-add-btn { background: var(--primary); color: var(--accent); font-size: 13px; }
+
+  /* ══ DARK MODE ══════════════════════════════════════════════════ */
+  html[data-theme="dark"] {
+    --bg-main:   #0F0F0F;
+    --bg-card:   #181818;
+    --border:    rgba(255,255,255,0.09);
+    --text-dark: #F0EBE0;
+    --text-mid:  #A09080;
+    --text-light:#5A5046;
+    --accent:    #C8A96E;
+    --primary:   #1A1A1A;
+  }
+  html[data-theme="dark"] body { background: var(--bg-main); }
+  html[data-theme="dark"] .top-header { background: #111; border-color: rgba(255,255,255,0.07); }
+  html[data-theme="dark"] .top-header h1,
+  html[data-theme="dark"] .grid-section-title { color: #F0EBE0; }
+  html[data-theme="dark"] .header-search input { background: #1c1c1c; color: #eee; border-color: rgba(255,255,255,0.1); }
+  html[data-theme="dark"] .order-panel { background: #111 !important; border-color: rgba(255,255,255,0.07) !important; }
+  html[data-theme="dark"] .meta-field input,
+  html[data-theme="dark"] .meta-field select { background: #1e1e1e; color: #eee; border-color: rgba(255,255,255,0.1); }
+  html[data-theme="dark"] .order-items-label h3 { color: #F0EBE0; }
+  html[data-theme="dark"] .total-row { color: #A09080; }
+  html[data-theme="dark"] .total-row.grand { color: #F0EBE0; }
+  html[data-theme="dark"] .checkout-btn { background: #C8A96E; color: #111; }
+  html[data-theme="dark"] .cat-chip { background: #1e1e1e; border-color: rgba(255,255,255,0.09); }
+  html[data-theme="dark"] .cat-chip-label { color: #A09080; }
+  html[data-theme="dark"] .food-card { background: #1a1a1a !important; }
+  html[data-theme="dark"] .fc-img-fallback { background: #222; }
+  html[data-theme="dark"] .promo-strip { background: #1c1c1c; }
+  html[data-theme="dark"] .hero-banner { background: #1c1c1c; }
+  html[data-theme="dark"] .order-panel-topbar { background: linear-gradient(90deg,#C8A96E,#8B6A2E); }
+  html[data-theme="dark"] .modal { background: #1a1a1a; }
+  html[data-theme="dark"] .modal-receipt { background: #111; }
+  html[data-theme="dark"] .pay-opt { background: #1e1e1e; border-color: rgba(255,255,255,0.1); }
+
+  /* ── PROMO STRIP — bottom of menu section ────────────────────── */
+  .promo-strip {
+    margin-top: 24px;
+    border-radius: 18px;
+    background: var(--primary);
+    padding: 22px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .promo-strip::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      -55deg,
+      rgba(200,169,110,0.05) 0px, rgba(200,169,110,0.05) 20px,
+      transparent 20px, transparent 38px
+    );
+    pointer-events: none;
+  }
+  .promo-text {
+    position: relative;
+    z-index: 1;
+  }
+  .promo-text h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 2px;
+    color: #fff;
+    line-height: 1.1;
+  }
+  .promo-text h3 span { color: var(--accent); }
+  .promo-text p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+  }
+  .promo-badges {
+    display: flex;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+  }
+  .promo-badge {
+    padding: 7px 16px;
+    border-radius: 8px;
+    background: rgba(200,169,110,0.12);
+    border: 1px solid rgba(200,169,110,0.25);
+    text-align: center;
+  }
+  .promo-badge-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--accent);
+    display: block;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .promo-badge-lbl {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.35);
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* ── ORDER PANEL REDESIGN ────────────────────────────────────── */
+  .order-panel {
+    width: 300px !important;
+    flex-shrink: 0 !important;
+    background: var(--bg-card) !important;
+    border-left: 1.5px solid var(--border) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  /* Order panel top label bar */
+  .order-panel-topbar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    flex-shrink: 0;
+  }
+
+  .order-panel-header {
+    padding: 16px 16px 14px !important;
+    border-bottom: 1.5px solid var(--border) !important;
+    flex-shrink: 0 !important;
+  }
+  .order-panel-header h2 {
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 20px !important;
+    letter-spacing: 2px !important;
+    color: var(--text-dark) !important;
+    margin-bottom: 12px !important;
+  }
+
+  .order-meta-fields { display: flex; flex-direction: column; gap: 8px; }
+  .meta-field { display: flex; flex-direction: column; gap: 3px; }
+  .meta-field label {
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.1px; color: var(--text-light);
+  }
+  .meta-field input, .meta-field select {
+    padding: 7px 10px;
+    background: var(--bg-main);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: var(--text-dark);
+    transition: var(--t);
+  }
+  .meta-field input:focus, .meta-field select:focus { border-color: var(--accent); }
+  .meta-field input::placeholder { color: var(--text-light); }
+
+  .order-items-label {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 8px; flex-shrink: 0;
+  }
+  .order-items-label h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px; letter-spacing: 1.5px; color: var(--text-dark);
+  }
+  .order-items-label h3 #orderItemCount {
+    background: var(--primary); color: var(--accent);
+    border-radius: 4px; padding: 0 6px; font-size: 12px; margin-left: 6px;
+  }
+  .clear-btn {
+    font-size: 11px; font-weight: 600; color: var(--text-light);
+    padding: 4px 9px; border-radius: 6px; border: 1.5px solid var(--border);
+    background: transparent; transition: var(--t); cursor: pointer;
+  }
+  .clear-btn:hover { color: #DC2626; border-color: rgba(220,38,38,0.35); }
+
+  .order-items-list { flex: 1; overflow-y: auto; padding: 0 16px; }
+  .order-items-list::-webkit-scrollbar { width: 3px; }
+  .order-items-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .order-empty { text-align: center; padding: 32px 20px; color: var(--text-light); }
+  .order-empty-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.5; }
+  .order-empty p { font-size: 12px; line-height: 1.6; }
+
+  .order-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 0; border-bottom: 1px solid var(--border);
+  }
+  .order-item:last-child { border-bottom: none; }
+  .order-item-emoji {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--bg-main); display: flex; align-items: center;
+    justify-content: center; font-size: 16px; flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .order-item-info { flex: 1; min-width: 0; }
+  .order-item-name { font-size: 12px; font-weight: 600; color: var(--text-dark); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .order-item-price { font-size: 10.5px; color: var(--text-light); margin-top: 1px; }
+
+  .qty-controls { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .qty-btn {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--bg-main); border: 1.5px solid var(--border);
+    color: var(--text-dark); font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    transition: var(--t); line-height: 1;
+  }
+  .qty-btn:hover { background: var(--primary); border-color: var(--primary); color: var(--accent); }
+  .qty-btn.remove:hover { background: rgba(220,38,38,0.08); border-color: rgba(220,38,38,0.35); color: #DC2626; }
+  .qty-num { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--text-dark); min-width: 16px; text-align: center; }
+  .order-item-subtotal { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--text-dark); min-width: 46px; text-align: right; flex-shrink: 0; }
+
+  /* Totals */
+  .order-totals { padding: 12px 16px; border-top: 1.5px solid var(--border); flex-shrink: 0; }
+  .total-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-mid); padding: 4px 0; }
+  .total-row.grand {
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px;
+    color: var(--text-dark); padding-top: 8px; margin-top: 4px;
+    border-top: 1.5px solid var(--border);
+  }
+
+  /* Place Order button */
+  .order-actions { padding: 12px 16px 16px; flex-shrink: 0; }
+  .checkout-btn {
+    width: 100%; padding: 13px 20px;
+    background: var(--primary); color: #F5F0E8;
+    border-radius: 10px; border: none; cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 2px;
+    transition: var(--t); position: relative; overflow: hidden;
+  }
+  .checkout-btn:hover:not(:disabled) { background: var(--accent); color: var(--primary); }
+  .checkout-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ── PAYMENT MODAL (keeping existing, minor touch-up) ─────────── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(26,20,10,0.65);
+    backdrop-filter: blur(4px); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.22s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--bg-card); border-radius: 20px;
+    padding: 28px; width: 440px; max-width: 95vw;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 24px 60px rgba(26,20,10,0.22);
+    transform: scale(0.97); transition: transform 0.22s;
+  }
+  .modal-overlay.open .modal { transform: scale(1); }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--text-dark); margin-bottom: 4px; }
+  .modal-subtitle { font-size: 12px; color: var(--text-light); margin-bottom: 16px; }
+  .modal-receipt { background: var(--bg-main); border-radius: 10px; padding: 14px 16px; border: 1px solid var(--border); margin-bottom: 18px; }
+  .receipt-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-mid); padding: 3px 0; }
+  .receipt-row.total-row { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--text-dark); padding-top: 6px; }
+  .receipt-divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+  .payment-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-light); margin-bottom: 8px; }
+  .payment-options { display: flex; gap: 8px; margin-bottom: 12px; }
+  .pay-opt {
+    flex: 1; padding: 10px 8px; border-radius: 10px;
+    background: var(--bg-main); border: 1.5px solid var(--border);
+    font-size: 12px; font-weight: 600; color: var(--text-mid);
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    transition: var(--t); cursor: pointer;
+  }
+  .pay-opt.active { background: var(--primary); border-color: var(--primary); color: var(--accent); }
+  .pay-opt:hover:not(.active) { border-color: var(--accent); }
+  .pay-icon { font-size: 18px; }
+  .cash-tendered-row { display: flex; flex-direction: column; gap: 6px; }
+  .cash-tendered-row label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
+  .cash-input {
+    padding: 9px 12px; background: var(--bg-main);
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 14px; color: var(--text-dark); transition: var(--t); width: 100%;
+  }
+  .cash-input:focus { border-color: var(--accent); }
+  .change-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-mid); padding-top: 4px; }
+  .change-amt { font-weight: 700; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .modal-btn { flex: 1; padding: 12px; border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 1.5px; transition: var(--t); cursor: pointer; border: none; }
+  .modal-btn.cancel { background: var(--bg-main); border: 1.5px solid var(--border); color: var(--text-mid); }
+  .modal-btn.cancel:hover { border-color: var(--text-mid); color: var(--text-dark); }
+  .modal-btn.confirm { background: var(--primary); color: #F5F0E8; }
+  .modal-btn.confirm:hover { background: var(--accent); color: var(--primary); }
+
+  /* ── TOAST ─────────────────────────────────────────────────────── */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    padding: 11px 18px; border-radius: 10px; background: var(--primary);
+    color: #F5F0E8; font-size: 13px; font-weight: 500;
+    box-shadow: 0 4px 20px rgba(26,20,10,0.2);
+    animation: toastIn 0.25s ease, toastOut 0.25s ease 2.75s forwards;
+  }
+  .toast.success { background: #2D6A4F; }
+  .toast.error { background: #DC2626; }
+  @keyframes toastIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateX(30px)} }
+
+  /* Loading skeleton */
+  .loading-skeleton {
+    background: linear-gradient(90deg, var(--border) 25%, rgba(232,223,208,0.4) 50%, var(--border) 75%);
+    background-size: 400% 100%; animation: shimmer 1.4s ease infinite;
+    border-radius: 14px;
+  }
+  @keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+
+  /* ── RESPONSIVE ─────────────────────────────────────────────────── */
+  @media (max-width: 1100px) {
+    .menu-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    .order-panel { width: 270px !important; }
+    .hero-img-left, .hero-img-right { width: 170px; }
+    .hero-banner { padding: 0 160px; }
+    .hero-right { right: 170px; }
+  }
+  @media (max-width: 860px) {
+    .hero-img-left, .hero-img-right { width: 130px; }
+    .hero-banner { padding: 0 120px; }
+    .hero-right { right: 130px; }
+    .menu-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .order-panel { width: 240px !important; }
+    .promo-badges { display: none; }
+  }
+  @media (max-width: 640px) {
+    .content-body { flex-direction: column; }
+    .order-panel { width: 100% !important; max-height: 50vh; border-left: none !important; border-top: 1.5px solid var(--border); }
+    .menu-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .hero-img-left, .hero-img-right { display: none; }
+    .hero-banner { padding: 0 20px; min-height: 100px; }
+    .hero-headline { font-size: 24px; }
+    .hero-right { position: relative; right: auto; top: auto; transform: none; margin-left: auto; }
+    .promo-strip { flex-direction: column; align-items: flex-start; }
+  }
+  </style>
+</head>
+<body>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<button id="sidebarToggle" aria-label="Toggle menu">
+  <span></span><span></span><span></span>
+</button>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main-content">
+    <!-- TOP HEADER -->
+    <header class="top-header">
+      <h1>Order System</h1>
+      <div class="header-search">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search menu…" oninput="filterMenu(this.value)" id="searchInput">
+      </div>
+      <div class="header-spacer"></div>
+      <div class="header-actions">
+        <button class="icon-btn" title="Refresh" onclick="loadMenuItems(activeCatId)">↺</button>
+      </div>
+    </header>
+
+    <div class="content-body">
+      <!-- ── MENU SECTION ── -->
+      <main class="menu-section">
+
+        <!-- HERO BANNER -->
+        <div class="hero-banner-wrap">
+
+          <!-- Left overflow image — item_5 (strawberry drink) -->
+          <img
+            class="hero-img-left"
+            src="../pos_process2/images/item_5_17735445 84.png"
+            onerror="this.src='../pos_process2/images/item_1_17735445 42.png';this.onerror=null;"
+            alt="">
+
+          <!-- Right overflow image — item_9 (colorful drink) -->
+          <img
+            class="hero-img-right"
+            src="../pos_process2/images/item_9_17769307 31.png"
+            onerror="this.src='../pos_process2/images/item_4_17735445 61.png';this.onerror=null;"
+            alt="">
+
+          <div class="hero-banner">
+            <div class="hero-left">
+             
+            </div>
+            <div class="hero-right">
+              <div class="hero-stat">
+                <span class="hero-stat-val" id="heroItemCount">0</span>
+                <span class="hero-stat-lbl">In Cart</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-val" id="heroTotal">₱0</span>
+                <span class="hero-stat-lbl">Total</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CATEGORY CHIP ROW (brand-logo style) -->
+        <div class="cat-brand-row" id="categoryTabs"></div>
+
+        <!-- GRID SECTION HEADER -->
+        <div class="grid-section-header">
+          <span class="grid-section-title">Menu</span>
+          <span class="grid-section-count" id="gridItemCount">0 items</span>
+          <div class="grid-section-line"></div>
+        </div>
+
+        <!-- MENU GRID -->
+        <div class="menu-grid" id="menuGrid">
+          <div class="loading-skeleton" style="height:220px;"></div>
+          <div class="loading-skeleton" style="height:220px;"></div>
+          <div class="loading-skeleton" style="height:220px;"></div>
+          <div class="loading-skeleton" style="height:220px;"></div>
+          <div class="loading-skeleton" style="height:220px;"></div>
+          <div class="loading-skeleton" style="height:220px;"></div>
+          <div class="loading-skeleton" style="height:220px;"></div>
+          <div class="loading-skeleton" style="height:220px;"></div>
+        </div>
+
+        <!-- PROMO STRIP (like moto shop bottom banner) -->
+        <div class="promo-strip">
+          <div class="promo-text">
+            <h3>Pay in any method,<br><span>you choose.</span></h3>
+            <p>Cash · E-Wallet · Credit Card — all accepted</p>
+          </div>
+          <div class="promo-badges">
+            <div class="promo-badge">
+              <span class="promo-badge-val">12%</span>
+              <span class="promo-badge-lbl">VAT Incl.</span>
+            </div>
+            <div class="promo-badge">
+              <span class="promo-badge-val">3</span>
+              <span class="promo-badge-lbl">Pay Options</span>
+            </div>
+            <div class="promo-badge">
+              <span class="promo-badge-val">8+</span>
+              <span class="promo-badge-lbl">Categories</span>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- ── ORDER PANEL ── -->
+      <aside class="order-panel">
+        <div class="order-panel-topbar"></div>
+        <div class="order-panel-header">
+          <h2>Order Summary</h2>
+          <div class="order-meta-fields">
+            <div class="meta-field" style="position:relative">
+              <label>Customer Name</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input type="text" id="customerName" placeholder="Search customer…"
+                  autocomplete="off"
+                  oninput="onCustomerInput(this.value)"
+                  onfocus="onCustomerInput(this.value)"
+                  style="flex:1">
+                <button id="clearCustomerBtn" onclick="clearLinkedCustomer()"
+                  title="Unlink customer"
+                  style="display:none;flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(220,38,38,0.1);border:1.5px solid rgba(220,38,38,0.25);color:#B91C1C;font-size:14px;cursor:pointer;font-family:inherit;line-height:1">&#x2715;</button>
+              </div>
+              <div id="linkedCustomerBadge" style="display:none;margin-top:5px;padding:5px 10px;background:rgba(200,169,110,0.12);border:1px solid rgba(200,169,110,0.3);border-radius:8px;font-size:11.5px;color:#8B6840;font-weight:600"></div>
+              <div id="customerDropdown"
+                style="display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:9999;background:#fff;border:1.5px solid #e5e0d8;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.15);max-height:200px;overflow-y:auto">
+              </div>
+              <input type="hidden" id="linkedCustomerId" value="0">
+            </div>
+            <div class="meta-field">
+              <label>Table / Location</label>
+              <input type="text" id="tableNumber" placeholder="Table no.">
+            </div>
+            <div class="meta-field">
+              <label>Order Type</label>
+              <select id="orderType">
+                <option value="dine-in">Dine In</option>
+                <option value="takeout">Take Out</option>
+                <option value="delivery">Delivery</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-items-label">
+          <h3>Items <span id="orderItemCount"></span></h3>
+          <button class="clear-btn" onclick="clearOrder()">Clear</button>
+        </div>
+
+        <div class="order-items-list" id="orderItemsList">
+          <div class="order-empty">
+            <div class="order-empty-icon">🛒</div>
+            <p>No items yet.<br>Tap a menu item to add it.</p>
+          </div>
+        </div>
+
+        <div class="order-totals">
+          <div class="total-row"><span>Subtotal</span><span>₱<span id="subtotal">0.00</span></span></div>
+          <div class="total-row"><span>VAT (12%)</span><span>₱<span id="tax">0.00</span></span></div>
+          <div class="total-row grand"><span>Grand Total</span><span>₱<span id="grandTotal">0.00</span></span></div>
+        </div>
+
+        <div class="order-actions">
+          <button class="checkout-btn" id="checkoutBtn" disabled onclick="openCheckoutModal()">
+            Place Order →
+          </button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <div class="modal-title">Confirm Order</div>
+    <div class="modal-subtitle">
+      <strong id="modalCustomer">Guest</strong> &nbsp;·&nbsp;
+      Table <strong id="modalTable">—</strong> &nbsp;·&nbsp;
+      <strong id="modalOrderType">Dine In</strong>
+    </div>
+    <div class="modal-receipt">
+      <div id="receiptItems"></div>
+      <hr class="receipt-divider">
+      <div class="receipt-row"><span>Subtotal</span><span>₱<span id="receiptSubtotal">0</span></span></div>
+      <div class="receipt-row"><span>VAT 12%</span><span>₱<span id="receiptTax">0</span></span></div>
+      <div class="receipt-row total-row"><span>Grand Total</span><span>₱<span id="receiptGrand">0</span></span></div>
+    </div>
+    <div class="payment-section">
+      <div class="payment-label">Payment Method</div>
+      <div class="payment-options">
+        <button class="pay-opt active" id="pay-cash" onclick="selectPayment('cash',this)">
+          <span class="pay-icon">💵</span><span>Cash</span>
+        </button>
+        <button class="pay-opt" id="pay-ewallet" onclick="selectPayment('ewallet',this)">
+          <span class="pay-icon">📱</span><span>E-Wallet</span>
+        </button>
+        <button class="pay-opt" id="pay-card" onclick="selectPayment('card',this)">
+          <span class="pay-icon">💳</span><span>Card</span>
+        </button>
+      </div>
+      <div class="cash-tendered-row" id="cashTenderedRow">
+        <label>Cash Tendered</label>
+        <input type="number" id="cashTendered" placeholder="0.00" min="0" step="0.01"
+               oninput="calcChange()" class="cash-input">
+        <div class="change-row" id="changeRow" style="display:none">
+          <span>Change</span><span class="change-amt" id="changeAmt">₱0.00</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeCheckoutModal()">Cancel</button>
+      <button class="modal-btn confirm" onclick="confirmCheckout()">Confirm Order</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="js/generated_images.js"></script>
+<script src="js/auth-check.js"></script>
+<script>
+const _user = requireLogin(['admin','cashier']);
+if (_user) buildNav('index', _user);
+</script>
+<script src="js/app.js?v=20260332"></script>
+
+<script>
+/* ── CATEGORY RENDER OVERRIDE — chip style ── */
+const _origRenderCategories = renderCategories;
+window.renderCategories = function() {
+  const tabs = document.getElementById('categoryTabs');
+  if (!tabs) return;
+  tabs.innerHTML = categories.map(cat => {
+    const isActive = cat.id == activeCatId;
+    const imgHtml = cat.catImg
+      ? `<div class="cat-chip-img"><img src="${cat.catImg}" alt=""></div>`
+      : `<div class="cat-chip-img">${cat.icon || '🍽️'}</div>`;
+    return `<button class="cat-chip ${isActive ? 'active' : ''}" onclick="selectCategory(${cat.id})">
+      ${imgHtml}
+      <span class="cat-chip-label">${cat.name}</span>
+    </button>`;
+  }).join('');
+};
+
+/* ── MENU GRID RENDER OVERRIDE — full-image card ── */
+const _origRenderMenuGrid = renderMenuGrid;
+window.renderMenuGrid = function() {
+  const grid = document.getElementById('menuGrid');
+  if (!menuItems.length) {
+    grid.innerHTML = `<div class="menu-empty"><div class="menu-empty-icon">🍽️</div><h3>No items found</h3></div>`;
+    _updateSectionCount(0);
+    return;
+  }
+  grid.innerHTML = menuItems.map((item, i) => {
+    const inOrder = order.find(o => o.id == item.id);
+    const qty     = inOrder ? inOrder.qty : 0;
+    const price   = parseFloat(item.price);
+    const safeEmoji = (item.icon || '').replace(/'/g,'');
+
+    // Determine image src
+    let imgSrc = '';
+    if (item.image_url) {
+      imgSrc = item.image_url;
+    } else if (typeof GENERATED_ITEM_IMAGES !== 'undefined' && GENERATED_ITEM_IMAGES[item.id]) {
+      imgSrc = GENERATED_ITEM_IMAGES[item.id];
+    }
+
+    const imgPart = imgSrc
+      ? `<img class="fc-img" src="${imgSrc}" alt="${escHtml(item.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+         <div class="fc-img-fallback" style="display:none;">${safeEmoji||'🍽️'}</div>`
+      : `<div class="fc-img-fallback">${safeEmoji||'🍽️'}</div>`;
+
+    return `
+      <div class="food-card ${qty > 0 ? 'in-order' : ''}" id="card-${item.id}"
+           onclick="addItem(${item.id},'${escHtml(item.name)}',${price},'${safeEmoji}')">
+        <!-- Full image fills the card -->
+        <div class="fc-img-wrap">
+          ${imgPart}
+          <!-- qty badge -->
+          <div class="food-card-qty-badge">${qty}</div>
+          <!-- bottom overlay: name + price + button -->
+          <div class="fc-overlay">
+            <div class="fc-overlay-top">
+              <span class="fc-cat">${item.category_name || ''}</span>
+            </div>
+            <div class="fc-overlay-bottom">
+              <div class="fc-name">${escHtml(item.name)}</div>
+              <div class="fc-row">
+                <span class="fc-price">₱${formatPrice(price)}</span>
+                <button class="fc-add-btn" onclick="event.stopPropagation();addItem(${item.id},'${escHtml(item.name)}',${price},'${safeEmoji}')">
+                  ${qty > 0 ? `+${qty}` : '+'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  _updateSectionCount(menuItems.length);
+  _updateHeroStats();
+};
+
+/* ── RENDER ORDER PANEL OVERRIDE — update hero stats too ── */
+const _origRenderOrderPanel = renderOrderPanel;
+window.renderOrderPanel = function() {
+  _origRenderOrderPanel();
+  _updateHeroStats();
+};
+
+function _updateSectionCount(n) {
+  const el = document.getElementById('gridItemCount');
+  if (el) el.textContent = n + ' item' + (n !== 1 ? 's' : '');
+}
+
+function _updateHeroStats() {
+  const totalQty = order.reduce((s,i) => s + i.qty, 0);
+  const total    = order.reduce((s,i) => s + i.price * i.qty, 0);
+  const cartEl   = document.getElementById('heroItemCount');
+  const totEl    = document.getElementById('heroTotal');
+  if (cartEl) cartEl.textContent = totalQty;
+  if (totEl)  totEl.textContent  = '₱' + (total > 0 ? Math.round(total).toLocaleString() : '0');
+}
+
+/* ── SEARCH ── */
+function filterMenu(query) {
+  if (!query.trim()) {
+    if (activeCatId == 1) menuItems = [...allMenuItems];
+    else {
+      const cat = categories.find(c => c.id == activeCatId);
+      menuItems = allMenuItems.filter(i => i.category_name === (cat ? cat.name : ''));
+    }
+    renderMenuGrid(); return;
+  }
+  const q = query.toLowerCase();
+  const f = allMenuItems.filter(i =>
+    i.name.toLowerCase().includes(q) ||
+    (i.description || '').toLowerCase().includes(q) ||
+    (i.category_name || '').toLowerCase().includes(q)
+  );
+  menuItems = f; renderMenuGrid();
+}
+
+/* Initial hero stats */
+document.addEventListener('DOMContentLoaded', () => {
+  _updateHeroStats();
+
+  // ── Apply saved theme ──
+  const savedTheme = localStorage.getItem('pk_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+
+  // ── Apply saved hero banner image ──
+  const heroBg = localStorage.getItem('pk_hero_bg');
+  if (heroBg) {
+    const banner = document.querySelector('.hero-banner');
+    if (banner) {
+      banner.style.backgroundImage = `url('${heroBg}')`;
+      banner.style.backgroundSize  = 'cover';
+      banner.style.backgroundPosition = 'center';
+    }
+  }
+
+  // ── Apply saved promo strip image ──
+  const promoBg = localStorage.getItem('pk_promo_bg');
+  if (promoBg) {
+    const strip = document.querySelector('.promo-strip');
+    if (strip) {
+      strip.style.backgroundImage = `url('${promoBg}')`;
+      strip.style.backgroundSize  = 'cover';
+      strip.style.backgroundPosition = 'center';
+    }
+  }
+});
+</script>
+</body>
+</html>

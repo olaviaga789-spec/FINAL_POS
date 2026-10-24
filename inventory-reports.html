@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){var t=localStorage.getItem("pk_theme")||"light";document.documentElement.setAttribute("data-theme",t);})();</script>
+<style>
+/* SIDEBAR OVERRIDE */
+.sidebar {
+  position: fixed !important; top: 0 !important; left: 0 !important;
+  height: 100% !important; width: 220px !important;
+  background: #1A1A1A !important; z-index: 100 !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1) !important;
+  overflow: hidden !important; display: flex !important; flex-direction: column !important;
+}
+.sidebar.open { transform: translateX(0) !important; overflow: visible !important; }
+.sidebar:not(.open) .logo-text,
+.sidebar:not(.open) .nav-section-label,
+.sidebar:not(.open) .nav-item span,
+.sidebar:not(.open) .user-info,
+.sidebar:not(.open) #logoutMenu { display: none !important; }
+.sidebar.open .logo-text,
+.sidebar.open .nav-section-label,
+.sidebar.open .nav-item span,
+.sidebar.open .user-info { display: block !important; }
+.sidebar.open .nav-item { justify-content: flex-start !important; padding: 10px 12px !important; }
+.sidebar.open .sidebar-user { justify-content: flex-start !important; }
+.sidebar.open .sidebar-logo { justify-content: flex-start !important; padding: 22px 20px !important; }
+.main-content { width: 100% !important; margin-left: 0 !important; }
+.top-header { padding-left: 66px !important; }
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; backdrop-filter: blur(2px); }
+.sidebar-backdrop.show { display: block; }
+#sidebarToggle {
+  display: flex !important; visibility: visible !important; opacity: 1 !important;
+  position: fixed !important; top: 14px !important; left: 14px !important;
+  z-index: 999999 !important; width: 42px !important; height: 42px !important;
+  border-radius: 10px !important; background: #1A1A1A !important;
+  border: none !important; cursor: pointer !important;
+  flex-direction: column !important; align-items: center !important;
+  justify-content: center !important; gap: 5px !important;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4) !important; padding: 0 !important;
+}
+#sidebarToggle span {
+  display: block !important; width: 20px !important; height: 2px !important;
+  background: #C8A96E !important; border-radius: 2px !important; transition: 0.22s !important;
+}
+#sidebarToggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg) !important; }
+#sidebarToggle.open span:nth-child(2) { opacity: 0 !important; }
+#sidebarToggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg) !important; }
+</style>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventory Reports — Padayon Kapetid POS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260521">
+  <style>
+  :root { --bg-main:#F5F0E8; --bg-card:#FDFAF4; --border:#E8DFD0; --text-dark:#1A1A1A; --text-mid:#5C5346; --text-light:#9C8E7E; --accent:#C8A96E; --primary:#1A1A1A; }
+  /* ── LAYOUT ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 14px; background: var(--bg-main,#F5F0E8); color: var(--text-dark,#1A1A1A); }
+  .app-shell { display: flex; height: 100vh; overflow: hidden; }
+  .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── TOP HEADER ── */
+  .top-header {
+    height: 62px; background: var(--bg-card,#FDFAF4);
+    border-bottom: 1.5px solid var(--border,#E8DFD0);
+    display: flex; align-items: center;
+    padding: 0 24px 0 66px; gap: 14px; flex-shrink: 0;
+  }
+  .top-header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px; letter-spacing: 2px; color: var(--text-dark,#1A1A1A);
+  }
+  .header-spacer { flex: 1; }
+
+  /* ── PERIOD TABS ── */
+  .period-tabs { display: flex; gap: 5px; }
+  .period-tab {
+    padding: 6px 14px; border-radius: 100px;
+    font-size: 12px; font-weight: 600;
+    background: var(--bg-main,#F5F0E8); border: 1.5px solid var(--border,#E8DFD0);
+    color: var(--text-light,#9C8E7E); cursor: pointer; transition: 0.16s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .period-tab.active { background: #1A1A1A; border-color: #1A1A1A; color: #C8A96E; }
+  .period-tab:hover:not(.active) { border-color: #C8A96E; color: var(--text-dark,#1A1A1A); }
+
+  /* ── SEARCH & FILTER ROW ── */
+  .filter-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .search-wrap {
+    position: relative; flex: 1; min-width: 180px; max-width: 280px;
+  }
+  .search-wrap input {
+    width: 100%; padding: 8px 12px 8px 34px;
+    border-radius: 10px; border: 1.5px solid var(--border,#E8DFD0);
+    background: var(--bg-card,#FDFAF4); font-size: 13px; color: var(--text-dark,#1A1A1A);
+    font-family: 'DM Sans', sans-serif;
+    transition: 0.16s;
+  }
+  .search-wrap input:focus { border-color: #C8A96E; outline: none; }
+  .search-wrap::before {
+    content: '🔍'; position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%); font-size: 14px; pointer-events: none;
+  }
+  .cat-select {
+    padding: 8px 12px; border-radius: 10px;
+    border: 1.5px solid var(--border,#E8DFD0); background: var(--bg-card,#FDFAF4);
+    font-size: 13px; color: var(--text-dark,#1A1A1A); font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: 0.16s;
+  }
+  .cat-select:focus { border-color: #C8A96E; outline: none; }
+
+  .export-btn {
+    padding: 8px 16px; border-radius: 10px;
+    background: #1A1A1A; color: #C8A96E;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px; letter-spacing: 1.5px;
+    border: none; cursor: pointer; transition: 0.16s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .export-btn:hover { background: #C8A96E; color: #1A1A1A; }
+
+  /* ── MAIN BODY ── */
+  .inv-body {
+    flex: 1; overflow-y: auto;
+    padding: 22px 28px; display: flex; flex-direction: column; gap: 20px;
+  }
+  .inv-body::-webkit-scrollbar { width: 4px; }
+  .inv-body::-webkit-scrollbar-thumb { background: var(--border,#E8DFD0); border-radius: 2px; }
+
+  /* ── KPI STRIP ── */
+  .kpi-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  }
+  @media(max-width:700px) { .kpi-strip { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:420px) { .kpi-strip { grid-template-columns: 1fr; } }
+
+  .kpi-card {
+    background: var(--bg-card,#FDFAF4); border: 1.5px solid var(--border,#E8DFD0);
+    border-radius: 16px; padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    position: relative; overflow: hidden; transition: 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,20,10,0.10); }
+  .kpi-card.accent { background: #1A1A1A; border-color: #1A1A1A; }
+  .kpi-card::after { content: ''; position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; background: rgba(200,169,110,0.07); }
+  .kpi-card.accent::after { background: rgba(200,169,110,0.12); }
+  .kpi-icon { position: absolute; top: 16px; right: 18px; font-size: 22px; opacity: 0.35; }
+  .kpi-label {
+    font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--text-light,#9C8E7E);
+  }
+  .kpi-card.accent .kpi-label { color: rgba(200,169,110,0.6); }
+  .kpi-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 34px; letter-spacing: 0.5px;
+    color: var(--text-dark,#1A1A1A); line-height: 1;
+  }
+  .kpi-card.accent .kpi-value { color: #C8A96E; }
+  .kpi-sub { font-size: 11.5px; color: var(--text-light,#9C8E7E); font-weight: 500; }
+  .kpi-card.accent .kpi-sub { color: rgba(255,255,255,0.35); }
+  .kpi-badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 6px; font-size: 11px; font-weight: 700;
+  }
+  .kpi-badge.ok  { background: rgba(76,175,125,0.15); color: #4CAF7D; }
+  .kpi-badge.warn { background: rgba(234,179,8,0.15);  color: #B45309; }
+  .kpi-badge.crit { background: rgba(220,38,38,0.15);  color: #DC2626; }
+
+  /* ── TWO COLUMN LAYOUT ── */
+  .two-col { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+  @media(max-width:900px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── PANEL CARD ── */
+  .panel {
+    background: var(--bg-card,#FDFAF4); border: 1.5px solid var(--border,#E8DFD0);
+    border-radius: 16px; overflow: hidden;
+  }
+  .panel-head {
+    padding: 16px 20px; display: flex; align-items: center;
+    gap: 10px; border-bottom: 1.5px solid var(--border,#E8DFD0);
+  }
+  .panel-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 1.5px; color: var(--text-dark,#1A1A1A); flex: 1;
+  }
+  .panel-badge {
+    padding: 3px 10px; border-radius: 100px;
+    font-size: 11px; font-weight: 700;
+    background: var(--bg-main,#F5F0E8); border: 1.5px solid var(--border,#E8DFD0); color: var(--text-light,#9C8E7E);
+  }
+
+  /* ── INVENTORY TABLE ── */
+  .inv-table-wrap { overflow-x: auto; }
+  .inv-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  .inv-table th {
+    padding: 10px 16px; text-align: left;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-light,#9C8E7E);
+    background: var(--bg-main,#F5F0E8); border-bottom: 1.5px solid var(--border,#E8DFD0);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  .inv-table th:hover { color: var(--text-dark,#1A1A1A); }
+  .inv-table th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+  .inv-table th.sorted .sort-arrow { opacity: 1; color: #C8A96E; }
+  .inv-table td {
+    padding: 13px 16px; border-bottom: 1px solid var(--border,#F0EBE0);
+    vertical-align: middle; color: var(--text-dark,#1A1A1A);
+  }
+  .inv-table tr:last-child td { border-bottom: none; }
+  .inv-table tr:hover td { background: rgba(200,169,110,0.04); }
+
+  .item-cell { display: flex; align-items: center; gap: 12px; }
+  .item-emoji { font-size: 22px; width: 38px; height: 38px; border-radius: 10px; background: var(--bg-main,#F5F0E8); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border,#E8DFD0); }
+  .item-name { font-weight: 600; color: var(--text-dark,#1A1A1A); font-size: 13.5px; }
+  .item-cat  { font-size: 11px; color: var(--text-light,#9C8E7E); margin-top: 1px; }
+
+  .price-cell { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 0.5px; color: var(--text-dark,#1A1A1A); }
+
+  .stock-cell { display: flex; align-items: center; gap: 8px; }
+  .stock-num { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 0.5px; }
+  .stock-num.ok   { color: #4CAF7D; }
+  .stock-num.warn { color: #B45309; }
+  .stock-num.crit { color: #DC2626; }
+  .stock-bar-wrap { flex: 1; height: 5px; border-radius: 3px; background: var(--border,#E8DFD0); min-width: 50px; }
+  .stock-bar { height: 100%; border-radius: 3px; transition: width 0.4s; }
+  .stock-bar.ok   { background: #4CAF7D; }
+  .stock-bar.warn { background: #F59E0B; }
+  .stock-bar.crit { background: #DC2626; }
+
+  .status-pill {
+    padding: 3px 10px; border-radius: 100px;
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+  }
+  .status-pill.ok   { background: rgba(76,175,125,0.12);  color: #4CAF7D; }
+  .status-pill.warn { background: rgba(245,158,11,0.12);  color: #B45309; }
+  .status-pill.crit { background: rgba(220,38,38,0.12);   color: #DC2626; }
+  .status-pill.off  { background: rgba(156,142,126,0.12); color: #9C8E7E; }
+
+  .action-btn {
+    padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    border: 1.5px solid var(--border,#E8DFD0); background: transparent;
+    color: var(--text-mid,#5C5346); cursor: pointer; transition: 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .action-btn:hover { border-color: #C8A96E; color: #C8A96E; background: rgba(200,169,110,0.06); }
+
+  /* ── ALERTS PANEL ── */
+  .alerts-list { display: flex; flex-direction: column; }
+  .alert-item {
+    padding: 14px 20px; border-bottom: 1px solid var(--border,#F0EBE0);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .alert-dot.crit { background: #DC2626; }
+  .alert-dot.warn { background: #F59E0B; }
+  .alert-info { flex: 1; }
+  .alert-name { font-size: 13px; font-weight: 600; color: var(--text-dark,#1A1A1A); }
+  .alert-detail { font-size: 11.5px; color: var(--text-light,#9C8E7E); margin-top: 2px; }
+  .alert-stock { font-family: 'Bebas Neue', sans-serif; font-size: 20px; }
+  .alert-stock.crit { color: #DC2626; }
+  .alert-stock.warn { color: #F59E0B; }
+  .no-alerts {
+    padding: 36px 20px; text-align: center; color: var(--text-light,#9C8E7E); font-size: 13px;
+  }
+  .no-alerts .big { font-size: 36px; display: block; margin-bottom: 8px; }
+
+  /* ── CATEGORY BREAKDOWN ── */
+  .cat-list { display: flex; flex-direction: column; gap: 0; }
+  .cat-row {
+    padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border,#F0EBE0);
+  }
+  .cat-row:last-child { border-bottom: none; }
+  .cat-icon-box {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--bg-main,#F5F0E8); border: 1px solid var(--border,#E8DFD0);
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .cat-info { flex: 1; }
+  .cat-name { font-weight: 600; font-size: 13px; color: var(--text-dark,#1A1A1A); }
+  .cat-items-count { font-size: 11.5px; color: var(--text-light,#9C8E7E); }
+  .cat-val { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--text-dark,#1A1A1A); letter-spacing: 0.5px; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    padding: 60px 20px; text-align: center; color: var(--text-light,#9C8E7E);
+  }
+  .empty-state .big { font-size: 48px; display: block; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── LOADING ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--border,#F0EBE0) 25%, rgba(232,223,208,0.4) 50%, var(--border,#F0EBE0) 75%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 8px;
+  }
+  @keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+
+  /* ── TOAST ── */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast { padding: 11px 18px; border-radius: 10px; background: #1A1A1A; color: #F5F0E8; font-size: 13px; font-weight: 500; box-shadow: 0 4px 20px rgba(26,20,10,0.2); animation: toastIn 0.25s ease, toastOut 0.25s ease 2.75s forwards; }
+  .toast.success { background: #2D6A4F; }
+  .toast.error   { background: #DC2626; }
+  .toast.warn    { background: #B45309; }
+  @keyframes toastIn  { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateX(30px)} }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+    z-index: 500; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg-card,#FDFAF4); border-radius: 20px;
+    padding: 28px; width: 380px; max-width: 95vw;
+    box-shadow: 0 20px 60px rgba(26,20,10,0.25);
+    animation: modalIn 0.22s ease;
+  }
+  @keyframes modalIn { from{transform:scale(0.93);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: var(--text-dark,#1A1A1A); margin-bottom: 18px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light,#9C8E7E); display: block; margin-bottom: 5px; }
+  .modal-input {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid var(--border,#E8DFD0); border-radius: 10px;
+    background: var(--bg-main,#F5F0E8); font-size: 13px; font-family: 'DM Sans', sans-serif;
+    transition: 0.16s; color: var(--text-dark,#1A1A1A);
+  }
+  .modal-input:focus { border-color: #C8A96E; outline: none; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .modal-cancel {
+    padding: 10px 18px; border-radius: 10px; border: 1.5px solid var(--border,#E8DFD0);
+    background: transparent; color: var(--text-mid,#5C5346); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: 0.15s;
+  }
+  .modal-cancel:hover { border-color: #DC2626; color: #DC2626; }
+  .modal-save {
+    padding: 10px 22px; border-radius: 10px; border: none;
+    background: #1A1A1A; color: #C8A96E;
+    font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 1.5px;
+    cursor: pointer; transition: 0.15s;
+  }
+  .modal-save:hover { background: #C8A96E; color: #1A1A1A; }
+
+  @media(max-width:600px) {
+    .inv-body { padding: 16px; }
+    .top-header { gap: 8px; }
+    .period-tabs { flex-wrap: wrap; }
+  }
+  
+  /* ══════════════════════════════════════════════════════
+     DARK MODE — Inventory Reports (complete, !important)
+     ══════════════════════════════════════════════════════ */
+  html[data-theme="dark"] {
+    --bg-main:   #0F0F0F !important;
+    --bg-card:   #181818 !important;
+    --border:    rgba(255,255,255,0.08) !important;
+    --text-dark: #F0EBE0 !important;
+    --text-mid:  #A09080 !important;
+    --text-light:#5A5046 !important;
+    --accent:    #C8A96E !important;
+    --primary:   #1A1A1A !important;
+  }
+
+  /* ── Base ── */
+  html[data-theme="dark"] body                       { background: #0F0F0F !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .app-shell                 { background: #0F0F0F !important; }
+  html[data-theme="dark"] .main-content              { background: #0F0F0F !important; }
+  html[data-theme="dark"] .inv-body                  { background: #0F0F0F !important; }
+
+  /* ── Top Header ── */
+  html[data-theme="dark"] .top-header                { background: #111 !important; border-color: rgba(255,255,255,0.07) !important; }
+  html[data-theme="dark"] .top-header h1             { color: #F0EBE0 !important; }
+
+  /* ── Period tabs / filter buttons ── */
+  html[data-theme="dark"] .period-tab                { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; color: #5A5046 !important; }
+  html[data-theme="dark"] .period-tab.active         { background: #C8A96E !important; border-color: #C8A96E !important; color: #1A1A1A !important; }
+  html[data-theme="dark"] .period-tab:hover:not(.active) { border-color: #C8A96E !important; color: #F0EBE0 !important; }
+
+  /* ── KPI Cards ── */
+  html[data-theme="dark"] .kpi-strip                 { background: transparent !important; }
+  html[data-theme="dark"] .kpi-card                  { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .kpi-label                 { color: #5A5046 !important; }
+  html[data-theme="dark"] .kpi-value                 { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .kpi-sub                   { color: #5A5046 !important; }
+  html[data-theme="dark"] .kpi-icon                  { opacity: 0.4 !important; }
+
+  /* ── Search + Filter bar ── */
+  html[data-theme="dark"] .filter-bar                { background: transparent !important; }
+  html[data-theme="dark"] .search-wrap input         { background: #181818 !important; border-color: rgba(255,255,255,0.1) !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .search-wrap input::placeholder { color: #5A5046 !important; }
+  html[data-theme="dark"] .cat-select                { background: #181818 !important; border-color: rgba(255,255,255,0.1) !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .export-btn                { background: #C8A96E !important; color: #1A1A1A !important; }
+
+  /* ── Panels (Menu Items, Stock Alerts, By Category) ── */
+  html[data-theme="dark"] .panel                     { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .panel-head                { border-color: rgba(255,255,255,0.07) !important; background: #181818 !important; }
+  html[data-theme="dark"] .panel-title               { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .panel-badge               { background: #222 !important; border-color: rgba(255,255,255,0.08) !important; color: #A09080 !important; }
+
+  /* ── Inventory Table ── */
+  html[data-theme="dark"] .inv-table-wrap            { background: #181818 !important; }
+  html[data-theme="dark"] .inv-table                 { background: #181818 !important; }
+  html[data-theme="dark"] .inv-table th              { background: #111 !important; color: #5A5046 !important; border-color: rgba(255,255,255,0.06) !important; }
+  html[data-theme="dark"] .inv-table td              { color: #F0EBE0 !important; border-color: rgba(255,255,255,0.05) !important; background: #181818 !important; }
+  html[data-theme="dark"] .inv-table tr:hover td     { background: #1e1e1e !important; }
+
+  /* ── Table Cell Content ── */
+  html[data-theme="dark"] .item-emoji                { background: #222 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .item-name                 { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .item-cat                  { color: #5A5046 !important; }
+  html[data-theme="dark"] .price-cell                { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .stock-num                 { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .stock-bar-wrap            { background: rgba(255,255,255,0.06) !important; }
+
+  /* ── Action Button ── */
+  html[data-theme="dark"] .action-btn                { background: #222 !important; border-color: rgba(255,255,255,0.1) !important; color: #A09080 !important; }
+  html[data-theme="dark"] .action-btn:hover          { border-color: #C8A96E !important; color: #C8A96E !important; background: rgba(200,169,110,0.1) !important; }
+
+  /* ── Status Badges ── */
+  html[data-theme="dark"] .status-pill.ok            { background: rgba(76,175,125,0.15) !important; color: #4CAF7D !important; }
+  html[data-theme="dark"] .status-pill.warn          { background: rgba(251,146,60,0.15) !important; color: #FB923C !important; }
+  html[data-theme="dark"] .status-pill.crit          { background: rgba(239,68,68,0.15) !important; color: #F87171 !important; }
+  html[data-theme="dark"] .status-pill.off           { background: rgba(100,100,100,0.15) !important; color: #A09080 !important; }
+
+  /* ── Right Panels: Stock Alerts + By Category ── */
+  html[data-theme="dark"] .alert-item                { border-color: rgba(255,255,255,0.05) !important; }
+  html[data-theme="dark"] .alert-dot                 { flex-shrink: 0; }
+  html[data-theme="dark"] .alert-name                { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .alert-detail              { color: #5A5046 !important; }
+  html[data-theme="dark"] .alert-stock               { color: #F87171 !important; }
+  html[data-theme="dark"] .no-alerts                 { color: #5A5046 !important; }
+
+  html[data-theme="dark"] .cat-row                   { border-color: rgba(255,255,255,0.05) !important; }
+  html[data-theme="dark"] .cat-icon-box              { background: #222 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .cat-name                  { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .cat-items-count           { color: #5A5046 !important; }
+  html[data-theme="dark"] .cat-val                   { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .cat-bar-track             { background: rgba(255,255,255,0.06) !important; }
+
+  /* ── Edit Stock Modal ── */
+  html[data-theme="dark"] .modal-overlay             { background: rgba(0,0,0,0.7) !important; }
+  html[data-theme="dark"] .modal                     { background: #181818 !important; border: 1.5px solid rgba(255,255,255,0.1) !important; }
+  html[data-theme="dark"] .modal-title               { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .modal-item-name           { color: #A09080 !important; }
+  html[data-theme="dark"] .modal-label               { color: #A09080 !important; }
+  html[data-theme="dark"] .modal-input               { background: #111 !important; border-color: rgba(255,255,255,0.1) !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .modal-input:focus         { border-color: #C8A96E !important; }
+  html[data-theme="dark"] .modal-hint                { color: #5A5046 !important; }
+  html[data-theme="dark"] .modal-cancel              { background: #222 !important; border-color: rgba(255,255,255,0.1) !important; color: #A09080 !important; }
+  html[data-theme="dark"] .modal-cancel:hover        { border-color: #C8A96E !important; color: #C8A96E !important; }
+
+  /* ── Toast ── */
+  html[data-theme="dark"] .toast                     { background: #222 !important; color: #F0EBE0 !important; border: 1px solid rgba(255,255,255,0.08) !important; }
+
+  /* ── Empty / Loading States ── */
+  html[data-theme="dark"] .empty-state               { color: #5A5046 !important; }
+  html[data-theme="dark"] .empty-state p             { color: #5A5046 !important; }
+  html[data-theme="dark"] .skel                      { background: linear-gradient(90deg,#1e1e1e 25%,#2a2a2a 50%,#1e1e1e 75%) !important; background-size: 400% 100% !important; }
+
+  /* ── Scrollbar ── */
+  html[data-theme="dark"] .inv-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1) !important; }
+
+
+  html[data-theme="dark"] .modal-close               { background: #222 !important; color: #A09080 !important; border: none !important; }
+  html[data-theme="dark"] .modal-close:hover         { background: #2a2a2a !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .modal-footer              { border-color: rgba(255,255,255,0.08) !important; }
+</style>
+</head>
+<body>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<button id="sidebarToggle" aria-label="Toggle menu">
+  <span></span><span></span><span></span>
+</button>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main-content">
+    <header class="top-header">
+      <h1>Inventory Reports</h1>
+      <div class="header-spacer"></div>
+      <div class="period-tabs">
+        <button class="period-tab active" onclick="setPeriod('all',this)">All Items</button>
+        <button class="period-tab" onclick="setPeriod('low',this)">Low Stock</button>
+        <button class="period-tab" onclick="setPeriod('out',this)">Out of Stock</button>
+        <button class="period-tab" onclick="setPeriod('ok',this)">In Stock</button>
+      </div>
+    </header>
+
+    <div class="inv-body">
+
+      <!-- KPI Strip -->
+      <div class="kpi-strip" id="kpiStrip">
+        <div class="kpi-card accent">
+          <div class="kpi-icon">📦</div>
+          <div class="kpi-label">Total Items</div>
+          <div class="kpi-value" id="kpiTotal">—</div>
+          <div class="kpi-sub">menu items tracked</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-label">In Stock</div>
+          <div class="kpi-value" id="kpiOk" style="color:#4CAF7D">—</div>
+          <div class="kpi-sub"><span class="kpi-badge ok" id="kpiOkPct">—</span> of total</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-label">Low Stock</div>
+          <div class="kpi-value" id="kpiLow" style="color:#B45309">—</div>
+          <div class="kpi-sub"><span class="kpi-badge warn" id="kpiLowPct">—</span> of total</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🚫</div>
+          <div class="kpi-label">Unavailable</div>
+          <div class="kpi-value" id="kpiOff" style="color:#DC2626">—</div>
+          <div class="kpi-sub">disabled in menu</div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <input type="text" id="searchInput" placeholder="Search items…" oninput="applyFilters()">
+        </div>
+        <select class="cat-select" id="catFilter" onchange="applyFilters()">
+          <option value="">All Categories</option>
+        </select>
+        <button class="export-btn" onclick="exportCSV()">
+          ⬇ Export CSV
+        </button>
+      </div>
+
+      <!-- Main table + sidebar -->
+      <div class="two-col">
+
+        <!-- LEFT: Item Table -->
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Menu Items</span>
+            <span class="panel-badge" id="tableCount">0 items</span>
+          </div>
+          <div class="inv-table-wrap">
+            <table class="inv-table" id="invTable">
+              <thead>
+                <tr>
+                  <th onclick="sortBy('name')">Item <span class="sort-arrow">↕</span></th>
+                  <th onclick="sortBy('price')">Price <span class="sort-arrow">↕</span></th>
+                  <th onclick="sortBy('stock')">Stock <span class="sort-arrow">↕</span></th>
+                  <th onclick="sortBy('status')">Status <span class="sort-arrow">↕</span></th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="invBody">
+                <tr><td colspan="5"><div style="padding:40px;text-align:center;color:#9C8E7E">Loading inventory…</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- RIGHT: Alerts + Category breakdown -->
+        <div style="display:flex;flex-direction:column;gap:18px;">
+
+          <!-- Stock Alerts -->
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title">Stock Alerts</span>
+              <span class="panel-badge" id="alertCount">0</span>
+            </div>
+            <div class="alerts-list" id="alertsList">
+              <div class="no-alerts"><span class="big">✅</span>No alerts right now</div>
+            </div>
+          </div>
+
+          <!-- Category Breakdown -->
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title">By Category</span>
+            </div>
+            <div class="cat-list" id="catBreakdown">
+              <div class="no-alerts"><span class="big">📂</span>Loading…</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /inv-body -->
+  </div><!-- /main-content -->
+</div><!-- /app-shell -->
+
+<!-- Edit Stock Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title" id="editModalTitle">Edit Stock</div>
+    <input type="hidden" id="editItemId">
+    <div class="modal-field">
+      <label class="modal-label">Item Name</label>
+      <input class="modal-input" id="editItemName" readonly style="opacity:0.6">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Stock Quantity</label>
+      <input class="modal-input" type="number" id="editStock" min="0" max="9999" placeholder="Enter quantity">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Low Stock Threshold</label>
+      <input class="modal-input" type="number" id="editThreshold" min="0" max="999" placeholder="e.g. 10">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveStock()">Save Stock</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="js/auth-check.js"></script>
+<script>
+const _user = requireLogin(['admin']);
+if (_user) buildNav('inventory-report', _user);
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   INVENTORY REPORT — LOGIC
+   Stock levels are stored in the database via inventory.php
+   (falls back to localStorage in demo mode)
+   ══════════════════════════════════════════════════════ */
+
+const INVENTORY_API = './php/inventory.php';
+const LOW_DEFAULT   = 10;
+let allItems        = [];
+let filteredItems   = [];
+let currentPeriod   = 'all';
+let sortCol         = 'name';
+let sortDir         = 1;
+let demoMode        = false;
+
+// ── INIT ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadItems();
+});
+
+async function loadItems() {
+  try {
+    // inventory.php returns items with stock + stock_threshold from DB
+    const res  = await fetch(INVENTORY_API + '?action=get_stock');
+    if (!res.ok) throw new Error('Server error ' + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('bad response');
+
+    demoMode = false;
+    allItems = data.map(item => ({
+      ...item,
+      // DB columns: stock, stock_threshold
+      stock:     item.stock           ?? 0,
+      threshold: item.stock_threshold ?? LOW_DEFAULT,
+    }));
+
+    buildCatFilter();
+    applyFilters();
+    buildKPIs();
+    buildAlerts();
+    buildCatBreakdown();
+
+  } catch(e) {
+    // Demo / offline fallback
+    demoMode = true;
+    allItems = generateDemoItems();
+    buildCatFilter();
+    applyFilters();
+    buildKPIs();
+    buildAlerts();
+    buildCatBreakdown();
+    showToast('⚠️ Running in demo mode — stock changes won\'t persist to DB', 'warn');
+  }
+}
+
+// ── LOCAL STOCK STORAGE (demo-mode fallback only) ────
+function getLocalStock(id) {
+  try {
+    const s = JSON.parse(localStorage.getItem('pk_stock_' + id) || 'null');
+    if (s) return s;
+  } catch(e) {}
+  const stock = Math.floor(Math.random() * 60) + 2;
+  return { stock, threshold: LOW_DEFAULT };
+}
+
+function setLocalStock(id, stock, threshold) {
+  localStorage.setItem('pk_stock_' + id, JSON.stringify({ stock, threshold }));
+}
+
+// ── STOCK STATUS ──────────────────────────────────────
+function stockStatus(stock, threshold) {
+  if (stock <= 0)          return 'crit';
+  if (stock <= threshold)  return 'warn';
+  return 'ok';
+}
+
+// ── BUILD CAT FILTER ──────────────────────────────────
+function buildCatFilter() {
+  const sel  = document.getElementById('catFilter');
+  const cats = [...new Set(allItems.map(i => i.category_name).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All Categories</option>' +
+    cats.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+// ── PERIOD FILTER ────────────────────────────────────
+function setPeriod(p, btn) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+// ── APPLY FILTERS ────────────────────────────────────
+function applyFilters() {
+  const q   = document.getElementById('searchInput').value.toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+
+  filteredItems = allItems.filter(item => {
+    if (q   && !item.name.toLowerCase().includes(q) && !(item.category_name||'').toLowerCase().includes(q)) return false;
+    if (cat && item.category_name !== cat) return false;
+
+    const st = item.is_available == 1 ? stockStatus(item.stock, item.threshold) : 'off';
+    if (currentPeriod === 'low' && st !== 'warn') return false;
+    if (currentPeriod === 'out' && st !== 'crit') return false;
+    if (currentPeriod === 'ok'  && st !== 'ok')   return false;
+
+    return true;
+  });
+
+  sortItems();
+  renderTable();
+  document.getElementById('tableCount').textContent = filteredItems.length + ' items';
+}
+
+// ── SORT ──────────────────────────────────────────────
+function sortBy(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+
+  document.querySelectorAll('.inv-table th').forEach(th => th.classList.remove('sorted'));
+  const idx = ['name','price','stock','status'].indexOf(col);
+  if (idx >= 0) {
+    const ths = document.querySelectorAll('.inv-table th');
+    if (ths[idx]) ths[idx].classList.add('sorted');
+  }
+
+  sortItems();
+  renderTable();
+}
+
+function sortItems() {
+  filteredItems.sort((a,b) => {
+    let va, vb;
+    if (sortCol === 'name')   { va = a.name||'';  vb = b.name||''; return sortDir * va.localeCompare(vb); }
+    if (sortCol === 'price')  { va = parseFloat(a.price)||0; vb = parseFloat(b.price)||0; }
+    if (sortCol === 'stock')  { va = a.stock; vb = b.stock; }
+    if (sortCol === 'status') { va = a.is_available; vb = b.is_available; }
+    return sortDir * (va - vb);
+  });
+}
+
+// ── RENDER TABLE ──────────────────────────────────────
+function renderTable() {
+  const tbody = document.getElementById('invBody');
+  if (!filteredItems.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><span class="big">📋</span><p>No items match your filters.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filteredItems.map(item => {
+    const st  = item.is_available == 1 ? stockStatus(item.stock, item.threshold) : 'off';
+    const pct = Math.min(100, Math.max(0, (item.stock / ((item.threshold||10) * 3)) * 100));
+    const statusLabel = { ok:'In Stock', warn:'Low Stock', crit:'Out of Stock', off:'Unavailable' }[st];
+    const icon = item.category_icon || getCatIcon(item.category_name);
+
+    return `
+      <tr>
+        <td>
+          <div class="item-cell">
+            <div class="item-emoji">${icon}</div>
+            <div>
+              <div class="item-name">${esc(item.name)}</div>
+              <div class="item-cat">${esc(item.category_name||'Uncategorized')}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="price-cell">₱${parseFloat(item.price).toFixed(2)}</span></td>
+        <td>
+          ${st !== 'off' ? `
+          <div class="stock-cell">
+            <span class="stock-num ${st}">${item.stock}</span>
+            <div class="stock-bar-wrap"><div class="stock-bar ${st}" style="width:${pct}%"></div></div>
+          </div>` : `<span style="color:#9C8E7E;font-size:12px">—</span>`}
+        </td>
+        <td><span class="status-pill ${st}">${statusLabel}</span></td>
+        <td>
+          <button class="action-btn" onclick="openEdit(${item.id})">Edit Stock</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// ── KPIs ──────────────────────────────────────────────
+function buildKPIs() {
+  const total = allItems.length;
+  const ok    = allItems.filter(i => i.is_available == 1 && stockStatus(i.stock, i.threshold) === 'ok').length;
+  const low   = allItems.filter(i => i.is_available == 1 && stockStatus(i.stock, i.threshold) === 'warn').length;
+  const off   = allItems.filter(i => i.is_available != 1).length;
+  const pct   = total ? Math.round((ok/total)*100) : 0;
+  const lpct  = total ? Math.round((low/total)*100) : 0;
+
+  document.getElementById('kpiTotal').textContent = total;
+  document.getElementById('kpiOk').textContent    = ok;
+  document.getElementById('kpiLow').textContent   = low;
+  document.getElementById('kpiOff').textContent   = off;
+  document.getElementById('kpiOkPct').textContent  = pct + '%';
+  document.getElementById('kpiLowPct').textContent = lpct + '%';
+}
+
+// ── ALERTS ───────────────────────────────────────────
+function buildAlerts() {
+  const alerts = allItems
+    .filter(i => i.is_available == 1)
+    .map(i => ({ ...i, st: stockStatus(i.stock, i.threshold) }))
+    .filter(i => i.st === 'crit' || i.st === 'warn')
+    .sort((a,b) => a.stock - b.stock);
+
+  document.getElementById('alertCount').textContent = alerts.length;
+
+  const el = document.getElementById('alertsList');
+  if (!alerts.length) {
+    el.innerHTML = `<div class="no-alerts"><span class="big">✅</span>All items are well-stocked!</div>`;
+    return;
+  }
+  el.innerHTML = alerts.slice(0,8).map(a => `
+    <div class="alert-item">
+      <div class="alert-dot ${a.st}"></div>
+      <div class="alert-info">
+        <div class="alert-name">${esc(a.name)}</div>
+        <div class="alert-detail">${a.st === 'crit' ? 'Out of stock' : `Low — threshold: ${a.threshold}`}</div>
+      </div>
+      <div class="alert-stock ${a.st}">${a.stock}</div>
+    </div>`).join('');
+}
+
+// ── CATEGORY BREAKDOWN ────────────────────────────────
+function buildCatBreakdown() {
+  const cats = {};
+  allItems.forEach(item => {
+    const k = item.category_name || 'Uncategorized';
+    if (!cats[k]) cats[k] = { icon: item.category_icon || getCatIcon(k), count: 0, value: 0 };
+    cats[k].count++;
+    cats[k].value += parseFloat(item.price) * item.stock;
+  });
+
+  const sorted = Object.entries(cats).sort((a,b) => b[1].count - a[1].count);
+  const el = document.getElementById('catBreakdown');
+  if (!sorted.length) { el.innerHTML = '<div class="no-alerts"><span class="big">📂</span>No data</div>'; return; }
+
+  el.innerHTML = sorted.map(([name, d]) => `
+    <div class="cat-row">
+      <div class="cat-icon-box">${d.icon}</div>
+      <div class="cat-info">
+        <div class="cat-name">${esc(name)}</div>
+        <div class="cat-items-count">${d.count} items</div>
+      </div>
+      <div class="cat-val">₱${d.value.toLocaleString('en-PH',{maximumFractionDigits:0})}</div>
+    </div>`).join('');
+}
+
+// ── EDIT MODAL ───────────────────────────────────────
+function openEdit(id) {
+  const item = allItems.find(i => i.id == id);
+  if (!item) return;
+  document.getElementById('editItemId').value  = id;
+  document.getElementById('editItemName').value = item.name;
+  document.getElementById('editStock').value    = item.stock;
+  document.getElementById('editThreshold').value = item.threshold;
+  document.getElementById('editModal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('editModal').classList.remove('open');
+}
+async function saveStock() {
+  const id  = parseInt(document.getElementById('editItemId').value);
+  const qty = parseInt(document.getElementById('editStock').value)     || 0;
+  const thr = parseInt(document.getElementById('editThreshold').value) || LOW_DEFAULT;
+
+  const saveBtn = document.querySelector('#editModal .modal-save');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+
+  if (!demoMode) {
+    // Save to database
+    try {
+      const res  = await fetch(INVENTORY_API + '?action=update_stock', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ id, stock: qty, threshold: thr }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Save failed');
+      showToast('✅ Stock saved to database!', 'success');
+    } catch(err) {
+      showToast('❌ ' + err.message, 'error');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Stock'; }
+      return;
+    }
+  } else {
+    // Demo fallback — localStorage only
+    setLocalStock(id, qty, thr);
+    showToast('✅ Stock updated (demo mode)', 'success');
+  }
+
+  // Update in-memory regardless
+  const item = allItems.find(i => i.id == id);
+  if (item) { item.stock = qty; item.threshold = thr; }
+
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Stock'; }
+  closeModal();
+  applyFilters();
+  buildKPIs();
+  buildAlerts();
+  buildCatBreakdown();
+}
+
+// Close modal on backdrop click
+document.getElementById('editModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── EXPORT CSV ───────────────────────────────────────
+function exportCSV() {
+  const rows = [['Item','Category','Price','Stock','Threshold','Status']];
+  allItems.forEach(item => {
+    const st = item.is_available == 1 ? stockStatus(item.stock, item.threshold) : 'off';
+    const label = { ok:'In Stock', warn:'Low Stock', crit:'Out of Stock', off:'Unavailable' }[st];
+    rows.push([item.name, item.category_name||'', item.price, item.stock, item.threshold, label]);
+  });
+  const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'inventory_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('📥 CSV exported!', 'success');
+}
+
+// ── HELPERS ──────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function getCatIcon(name) {
+  name = (name||'').toLowerCase();
+  if (name.includes('coffee') || name.includes('espresso')) return '☕';
+  if (name.includes('tea'))    return '🍵';
+  if (name.includes('food') || name.includes('snack')) return '🍽️';
+  if (name.includes('drink') || name.includes('juice')) return '🥤';
+  if (name.includes('dessert') || name.includes('cake')) return '🍰';
+  if (name.includes('pastry') || name.includes('bread')) return '🥐';
+  return '🏷️';
+}
+
+function showToast(msg, type='') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type; t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ── DEMO DATA (when no PHP backend) ──────────────────
+function generateDemoItems() {
+  const cats = [
+    { id:1, name:'Coffee', icon:'☕' },
+    { id:2, name:'Tea',    icon:'🍵' },
+    { id:3, name:'Food',   icon:'🍽️' },
+    { id:4, name:'Drinks', icon:'🥤' },
+  ];
+  const items = [
+    { id:1, name:'Espresso',        price:80,  category_name:'Coffee', category_icon:'☕', is_available:1 },
+    { id:2, name:'Cappuccino',      price:120, category_name:'Coffee', category_icon:'☕', is_available:1 },
+    { id:3, name:'Caramel Latte',   price:150, category_name:'Coffee', category_icon:'☕', is_available:1 },
+    { id:4, name:'Americano',       price:100, category_name:'Coffee', category_icon:'☕', is_available:1 },
+    { id:5, name:'Matcha Latte',    price:140, category_name:'Tea',    category_icon:'🍵', is_available:1 },
+    { id:6, name:'Chamomile Tea',   price:90,  category_name:'Tea',    category_icon:'🍵', is_available:1 },
+    { id:7, name:'Earl Grey',       price:95,  category_name:'Tea',    category_icon:'🍵', is_available:1 },
+    { id:8, name:'Clubhouse Sandwich', price:180, category_name:'Food', category_icon:'🍽️', is_available:1 },
+    { id:9, name:'Cheese Croissant', price:110, category_name:'Food', category_icon:'🍽️', is_available:1 },
+    { id:10, name:'Cheesecake Slice', price:130, category_name:'Food', category_icon:'🍽️', is_available:1 },
+    { id:11, name:'Mango Shake',    price:120, category_name:'Drinks', category_icon:'🥤', is_available:1 },
+    { id:12, name:'Strawberry Milk',price:110, category_name:'Drinks', category_icon:'🥤', is_available:1 },
+    { id:13, name:'Iced Chocolate', price:130, category_name:'Drinks', category_icon:'🥤', is_available:0 },
+  ];
+  return items.map(item => {
+    const saved = getLocalStock(item.id);
+    return { ...item, stock: saved.stock, threshold: saved.threshold };
+  });
+}
+</script>
+</body>
+</html>

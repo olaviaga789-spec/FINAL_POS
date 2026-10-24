@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+/* ── SIDEBAR OVERRIDE ── */
+.sidebar {
+  position: fixed !important; top: 0 !important; left: 0 !important;
+  height: 100% !important; width: 220px !important;
+  background: #1A1A1A !important; z-index: 100 !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1) !important;
+  overflow: hidden !important; display: flex !important; flex-direction: column !important;
+}
+.sidebar.open { transform: translateX(0) !important; overflow: visible !important; }
+.sidebar:not(.open) .logo-text,
+.sidebar:not(.open) .nav-section-label,
+.sidebar:not(.open) .nav-item span,
+.sidebar:not(.open) .user-info,
+.sidebar:not(.open) #logoutMenu { display: none !important; }
+.sidebar.open .logo-text,
+.sidebar.open .nav-section-label,
+.sidebar.open .nav-item span,
+.sidebar.open .user-info { display: block !important; }
+.sidebar.open .nav-item { justify-content: flex-start !important; padding: 10px 12px !important; }
+.sidebar.open .sidebar-user { justify-content: flex-start !important; }
+.sidebar.open .sidebar-logo { justify-content: flex-start !important; padding: 22px 20px !important; }
+.main-content { width: 100% !important; margin-left: 0 !important; }
+.top-header { padding-left: 66px !important; }
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; backdrop-filter: blur(2px); }
+.sidebar-backdrop.show { display: block; }
+#sidebarToggle {
+  display: flex !important; visibility: visible !important; opacity: 1 !important;
+  position: fixed !important; top: 14px !important; left: 14px !important;
+  z-index: 999999 !important; width: 42px !important; height: 42px !important;
+  border-radius: 10px !important; background: #1A1A1A !important;
+  border: none !important; cursor: pointer !important;
+  flex-direction: column !important; align-items: center !important;
+  justify-content: center !important; gap: 5px !important;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4) !important; padding: 0 !important;
+}
+#sidebarToggle span {
+  display: block !important; width: 20px !important; height: 2px !important;
+  background: #C8A96E !important; border-radius: 2px !important; transition: 0.22s !important;
+}
+#sidebarToggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg) !important; }
+#sidebarToggle.open span:nth-child(2) { opacity: 0 !important; }
+#sidebarToggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg) !important; }
+</style>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Store Settings — Padayon Kapetid POS</title>
+  <link rel="stylesheet" href="css/style.css?v=20260332">
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  /* ══ DARK MODE ══ */
+  html[data-theme="dark"] {
+    --bg-main:   #0F0F0F;
+    --bg-card:   #181818;
+    --border:    rgba(255,255,255,0.09);
+    --text-dark: #F0EBE0;
+    --text-mid:  #A09080;
+    --text-light:#5A5046;
+  }
+  html[data-theme="dark"] body        { background: var(--bg-main); }
+  html[data-theme="dark"] .top-header { background: #111; border-color: rgba(255,255,255,0.07); }
+  html[data-theme="dark"] .top-header h1 { color: #F0EBE0; }
+  html[data-theme="dark"] .s-card     { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .s-label    { color: #A09080; }
+  html[data-theme="dark"] .s-input    { background: #111; border-color: rgba(255,255,255,0.1); color: #F0EBE0; }
+  html[data-theme="dark"] .s-input:focus { border-color: var(--accent); }
+  html[data-theme="dark"] .s-select   { background: #111; border-color: rgba(255,255,255,0.1); color: #F0EBE0; }
+  html[data-theme="dark"] .s-card-title { color: #F0EBE0; }
+  html[data-theme="dark"] .s-section-title { color: #F0EBE0; }
+  html[data-theme="dark"] .preview-box { background: #111; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .upload-zone { background: #111; border-color: rgba(255,255,255,0.1); }
+  html[data-theme="dark"] .upload-zone:hover { border-color: var(--accent); background: rgba(200,169,110,0.05); }
+  html[data-theme="dark"] .upload-hint { color: #5A5046; }
+  html[data-theme="dark"] .save-bar   { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .theme-card { background: #1e1e1e; border-color: rgba(255,255,255,0.09); }
+  html[data-theme="dark"] .theme-card.active { border-color: var(--accent); }
+  html[data-theme="dark"] .theme-label { color: #A09080; }
+  html[data-theme="dark"] .tab-nav    { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .tab-btn    { color: #A09080; }
+  html[data-theme="dark"] .tab-btn.active { background: #181818; color: #F0EBE0; }
+  html[data-theme="dark"] .acct-row   { border-color: rgba(255,255,255,0.07); }
+  html[data-theme="dark"] .acct-row:hover { background: rgba(255,255,255,0.03); }
+  html[data-theme="dark"] .modal-box  { background: #181818; border-color: rgba(255,255,255,0.1); }
+  html[data-theme="dark"] .modal-box h2 { color: #F0EBE0; }
+  html[data-theme="dark"] .divider    { border-color: rgba(255,255,255,0.07); }
+  html[data-theme="dark"] .receipt-preview { background: #1a1a1a; border-color: rgba(255,255,255,0.08); color: #ccc; }
+
+  /* ── LAYOUT ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; font-size: 14px; }
+  .app-shell { display: flex; height: 100vh; overflow: hidden; }
+  .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .top-header {
+    height: 62px; background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 24px 0 66px; gap: 14px; flex-shrink: 0;
+  }
+  .top-header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px; letter-spacing: 2px; color: var(--text-dark);
+  }
+
+  /* ── TAB NAV ── */
+  .tab-nav {
+    display: flex; gap: 4px;
+    background: var(--bg-main);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px 0 66px;
+    flex-shrink: 0;
+  }
+  .tab-btn {
+    padding: 9px 18px;
+    border: none; background: transparent;
+    font-size: 13px; font-weight: 600;
+    color: var(--text-light);
+    border-radius: 9px 9px 0 0;
+    cursor: pointer; transition: 0.16s;
+    border-bottom: 2px solid transparent;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tab-btn:hover { color: var(--text-dark); background: rgba(200,169,110,0.07); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--bg-card);
+  }
+  .tab-icon { font-size: 15px; }
+
+  /* ── SETTINGS BODY ── */
+  .settings-body {
+    flex: 1; overflow-y: auto;
+    padding: 28px 32px;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .settings-body::-webkit-scrollbar { width: 4px; }
+  .settings-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .tab-panel { display: none; flex-direction: column; gap: 24px; }
+  .tab-panel.active { display: flex; }
+
+  /* ── SECTION TITLE ── */
+  .s-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; letter-spacing: 2px;
+    color: var(--text-dark); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .s-section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ── SETTINGS CARD ── */
+  .s-card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px;
+  }
+  .s-card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px; letter-spacing: 1.5px;
+    color: var(--text-dark); margin-bottom: 4px;
+  }
+  .s-card-sub {
+    font-size: 12px; color: var(--text-light); margin-bottom: 18px;
+  }
+  .s-label {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.1px;
+    color: var(--text-light); display: block; margin-bottom: 6px;
+  }
+
+  /* ── INPUTS ── */
+  .s-input {
+    width: 100%;
+    padding: 10px 13px;
+    background: var(--bg-main);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: var(--text-dark);
+    transition: 0.16s;
+  }
+  .s-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,169,110,0.15); }
+  .s-input::placeholder { color: var(--text-light); }
+  textarea.s-input { resize: vertical; min-height: 72px; }
+
+  .s-select {
+    width: 100%;
+    padding: 10px 13px;
+    background: var(--bg-main);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: 0.16s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239C8E7E' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+  .s-select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(200,169,110,0.15); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .form-group:last-child { margin-bottom: 0; }
+
+  /* ── TOGGLE SWITCH ── */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .toggle-row:first-child { padding-top: 0; }
+  .toggle-info { display: flex; flex-direction: column; gap: 2px; }
+  .toggle-label { font-size: 13.5px; font-weight: 600; color: var(--text-dark); }
+  .toggle-desc  { font-size: 11.5px; color: var(--text-light); }
+  .toggle {
+    position: relative; width: 42px; height: 24px; flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0;
+    background: var(--border); border-radius: 24px;
+    cursor: pointer; transition: 0.2s;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; left: 3px; top: 3px;
+    transition: 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+  /* ── THEME TOGGLE ── */
+  .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .theme-card {
+    border: 2px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    cursor: pointer; transition: 0.18s; position: relative;
+  }
+  .theme-card:hover { border-color: var(--accent); }
+  .theme-card.active { border-color: var(--accent); }
+  .theme-card.active::after {
+    content: '✓';
+    position: absolute; top: 8px; right: 10px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--primary);
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .theme-preview { height: 90px; display: flex; align-items: stretch; border-radius: 10px 10px 0 0; overflow: hidden; }
+  .theme-preview-light { background: #F5F0E8; display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; }
+  .tp-sidebar { width: 28px; background: #1A1A1A; border-radius: 5px; flex-shrink: 0; margin-right: 8px; }
+  .tp-content { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+  .tp-bar { height: 8px; border-radius: 4px; background: #1A1A1A; width: 70%; }
+  .tp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; flex: 1; }
+  .tp-card-l { background: #FDFAF4; border-radius: 4px; border: 1px solid #E8DFD0; }
+  .theme-preview-dark { background: #0F0F0F; display: flex; gap: 8px; padding: 10px 12px; }
+  .tp-sidebar-d { width: 28px; background: #1A1A1A; border-radius: 5px; flex-shrink: 0; }
+  .tp-content-d { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+  .tp-bar-d { height: 8px; border-radius: 4px; background: #C8A96E; width: 60%; }
+  .tp-grid-d { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; flex: 1; }
+  .tp-card-d { background: #1A1A1A; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08); }
+  .theme-foot { padding: 8px 12px; text-align: center; border-top: 1px solid var(--border); }
+  .theme-label { font-size: 12px; font-weight: 700; color: var(--text-mid); letter-spacing: 0.5px; }
+  .theme-card.active .theme-label { color: var(--accent); }
+
+  /* ── BANNER UPLOAD ── */
+  .banner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .banner-grid { grid-template-columns: 1fr; } }
+  .banner-slot { display: flex; flex-direction: column; gap: 10px; }
+  .banner-slot-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
+  .preview-box {
+    width: 100%; height: 110px;
+    border-radius: 12px; border: 1.5px solid var(--border);
+    background: var(--bg-main); overflow: hidden; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .preview-box img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+  .preview-placeholder { font-size: 11px; color: var(--text-light); text-align: center; line-height: 1.5; }
+  .preview-placeholder span { font-size: 24px; display: block; margin-bottom: 4px; opacity: 0.4; }
+  .preview-remove {
+    position: absolute; top: 6px; right: 6px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(220,38,38,0.85); color: #fff;
+    font-size: 13px; border: none; cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+  }
+  .preview-box:hover .preview-remove { display: flex; }
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 12px; padding: 18px 16px;
+    text-align: center; cursor: pointer; transition: 0.18s;
+    background: var(--bg-main); position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: rgba(200,169,110,0.04); }
+  .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 24px; margin-bottom: 6px; opacity: 0.5; }
+  .upload-hint { font-size: 11.5px; color: var(--text-light); line-height: 1.5; }
+  .upload-hint strong { color: var(--accent); font-weight: 600; }
+
+  /* ── RECEIPT PREVIEW ── */
+  .receipt-layout { display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start; }
+  @media (max-width: 780px) { .receipt-layout { grid-template-columns: 1fr; } }
+  .receipt-preview {
+    background: #fafafa; border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    font-family: 'Courier New', monospace; font-size: 12px;
+    color: #333; line-height: 1.8;
+  }
+  .receipt-preview .rp-store { text-align: center; font-weight: 700; font-size: 14px; letter-spacing: 1px; }
+  .receipt-preview .rp-addr  { text-align: center; font-size: 11px; opacity: 0.6; }
+  .receipt-preview .rp-divider { border: none; border-top: 1px dashed #ccc; margin: 8px 0; }
+  .receipt-preview .rp-row   { display: flex; justify-content: space-between; }
+  .receipt-preview .rp-total { font-weight: 700; font-size: 14px; }
+  .receipt-preview .rp-footer { text-align: center; font-size: 11px; opacity: 0.6; margin-top: 6px; }
+
+  /* ── ACCOUNT TABLE ── */
+  .acct-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .add-acct-btn {
+    padding: 9px 18px;
+    background: var(--primary);
+    color: #F5F0E8;
+    border-radius: 10px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+    transition: 0.16s;
+  }
+  .add-acct-btn:hover { background: var(--accent); color: var(--primary); }
+
+  .acct-table { width: 100%; border-collapse: collapse; }
+  .acct-table th {
+    text-align: left; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-light); padding: 0 12px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .acct-row {
+    border-bottom: 1px solid var(--border);
+    transition: 0.14s;
+  }
+  .acct-row:hover { background: rgba(200,169,110,0.04); }
+  .acct-row:last-child { border-bottom: none; }
+  .acct-row td { padding: 12px; vertical-align: middle; font-size: 13.5px; }
+
+  .acct-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--primary); color: #F5F0E8;
+    font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .acct-name-cell { display: flex; align-items: center; gap: 10px; }
+  .acct-name { font-weight: 600; color: var(--text-dark); }
+  .acct-username { font-size: 11.5px; color: var(--text-light); }
+
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .badge-admin   { background: rgba(200,169,110,0.15); color: #A07830; }
+  .badge-cashier { background: rgba(45,106,79,0.12);  color: #2D6A4F; }
+  .badge-active  { background: rgba(45,106,79,0.12);  color: #2D6A4F; }
+  .badge-inactive{ background: rgba(220,38,38,0.1);   color: #DC2626; }
+
+  .acct-actions { display: flex; gap: 6px; }
+  .acct-btn {
+    padding: 5px 12px; border-radius: 7px; font-size: 12px;
+    font-weight: 600; cursor: pointer; border: 1.5px solid var(--border);
+    background: transparent; color: var(--text-mid);
+    transition: 0.14s;
+  }
+  .acct-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .acct-btn.danger:hover { border-color: #DC2626; color: #DC2626; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9000;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 28px 28px 24px;
+    width: 420px; max-width: 96vw;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+    animation: modalIn 0.22s ease;
+  }
+  @keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:none} }
+  .modal-box h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 1.5px;
+    color: var(--text-dark); margin-bottom: 4px;
+  }
+  .modal-sub { font-size: 12px; color: var(--text-light); margin-bottom: 20px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+  .modal-cancel {
+    padding: 10px 20px; border-radius: 10px; border: 1.5px solid var(--border);
+    background: transparent; color: var(--text-mid); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: 0.14s;
+  }
+  .modal-cancel:hover { border-color: var(--text-mid); }
+  .modal-save {
+    padding: 10px 24px; border-radius: 10px; border: none;
+    background: var(--primary); color: #F5F0E8;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.14s;
+  }
+  .modal-save:hover { background: var(--accent); color: var(--primary); }
+  .modal-danger {
+    padding: 10px 24px; border-radius: 10px; border: none;
+    background: #DC2626; color: #fff;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.14s;
+  }
+  .modal-danger:hover { background: #B91C1C; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* password strength */
+  .pass-strength { height: 4px; border-radius: 2px; margin-top: 6px; background: var(--border); overflow: hidden; }
+  .pass-strength-bar { height: 100%; border-radius: 2px; transition: 0.3s; width: 0; }
+
+  /* ── SAVE BAR ── */
+  .save-bar {
+    position: sticky; bottom: 0;
+    background: var(--bg-card);
+    border-top: 1.5px solid var(--border);
+    padding: 14px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+  .save-bar-info { font-size: 12px; color: var(--text-light); }
+  .save-bar-info strong { color: var(--accent); }
+  .save-btn {
+    padding: 11px 28px; background: var(--primary); color: #F5F0E8;
+    border-radius: 10px; border: none; cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px; letter-spacing: 2px; transition: 0.18s;
+  }
+  .save-btn:hover { background: var(--accent); color: var(--primary); }
+  .reset-btn {
+    padding: 11px 20px; background: transparent; color: var(--text-light);
+    border-radius: 10px; border: 1.5px solid var(--border);
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; transition: 0.18s;
+  }
+  .reset-btn:hover { border-color: #DC2626; color: #DC2626; }
+
+  /* ── TOAST ── */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    padding: 11px 18px; border-radius: 10px; background: var(--primary);
+    color: #F5F0E8; font-size: 13px; font-weight: 500;
+    box-shadow: 0 4px 20px rgba(26,20,10,0.2);
+    animation: toastIn 0.25s ease, toastOut 0.25s ease 2.75s forwards;
+  }
+  .toast.success { background: #2D6A4F; }
+  .toast.error   { background: #DC2626; }
+  .toast.warn    { background: #92400E; }
+  .toast.info    { background: #1E3A5F; }
+  @keyframes toastIn  { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateX(30px)} }
+
+  /* ── INFO BOX ── */
+  .info-box {
+    background: rgba(200,169,110,0.08);
+    border: 1px solid rgba(200,169,110,0.25);
+    border-radius: 10px; padding: 12px 14px;
+    font-size: 12.5px; color: var(--text-mid);
+    display: flex; gap: 9px; align-items: flex-start;
+  }
+  .info-box .info-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── COLOR PICKER ROW ── */
+  .color-row { display: flex; align-items: center; gap: 10px; }
+  .color-swatch {
+    width: 36px; height: 36px; border-radius: 8px; border: 2px solid var(--border);
+    cursor: pointer; padding: 0; flex-shrink: 0; overflow: hidden;
+  }
+  .color-swatch input[type="color"] { width: 48px; height: 48px; border: none; margin: -6px; cursor: pointer; }
+
+  @media(max-width:640px){
+    .form-row, .form-row.three { grid-template-columns: 1fr; }
+    .receipt-layout { grid-template-columns: 1fr; }
+  }
+  
+  html[data-theme="dark"] body { background: #0F0F0F; }
+  html[data-theme="dark"] .page-body,
+  html[data-theme="dark"] .settings-body { background: #0F0F0F; }
+  html[data-theme="dark"] .s-section-title { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .s-card-title { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .s-card { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .s-label { color: #A09080 !important; }
+  html[data-theme="dark"] .s-hint { color: #5A5046 !important; }
+  html[data-theme="dark"] .s-input { background: #111 !important; border-color: rgba(255,255,255,0.1) !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .s-input:focus { border-color: #C8A96E !important; }
+  html[data-theme="dark"] .s-select { background: #111 !important; border-color: rgba(255,255,255,0.1) !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .s-textarea { background: #111 !important; border-color: rgba(255,255,255,0.1) !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .preview-box { background: #111 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .preview-label { color: #5A5046 !important; }
+  html[data-theme="dark"] .preview-val { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .upload-zone { background: #111 !important; border-color: rgba(255,255,255,0.1) !important; color: #5A5046 !important; }
+  html[data-theme="dark"] .upload-zone:hover { border-color: #C8A96E !important; background: rgba(200,169,110,0.04) !important; }
+  html[data-theme="dark"] .upload-zone-label { color: #5A5046 !important; }
+  html[data-theme="dark"] .settings-nav { background: #111 !important; border-color: rgba(255,255,255,0.07) !important; }
+  html[data-theme="dark"] .s-nav-item { color: #5A5046; }
+  html[data-theme="dark"] .s-nav-item:hover:not(.active) { color: #F0EBE0; background: rgba(255,255,255,0.03); }
+  html[data-theme="dark"] .s-nav-item.active { color: #C8A96E; background: rgba(200,169,110,0.1); }
+  html[data-theme="dark"] .s-nav-label { color: #5A5046 !important; }
+  html[data-theme="dark"] .user-row { border-color: rgba(255,255,255,0.05) !important; }
+  html[data-theme="dark"] .user-name { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .user-username { color: #5A5046 !important; }
+  html[data-theme="dark"] .user-role-badge { background: rgba(200,169,110,0.15); color: #C8A96E; }
+  html[data-theme="dark"] .user-role-badge.cashier { background: rgba(99,102,241,0.15); color: #818CF8; }
+  html[data-theme="dark"] .btn-ghost { background: #222 !important; border-color: rgba(255,255,255,0.1) !important; color: #A09080 !important; }
+  html[data-theme="dark"] .btn-ghost:hover { border-color: #C8A96E !important; color: #C8A96E !important; }
+  html[data-theme="dark"] .divider { background: rgba(255,255,255,0.05) !important; }
+  html[data-theme="dark"] .m-box { background: #181818 !important; border-color: rgba(255,255,255,0.1) !important; }
+  html[data-theme="dark"] .m-head { border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .m-title { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .m-close { background: #222 !important; color: #A09080 !important; }
+  html[data-theme="dark"] .m-footer { border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .form-label { color: #A09080 !important; }
+  html[data-theme="dark"] .form-input,
+  html[data-theme="dark"] .form-select { background: #111 !important; border-color: rgba(255,255,255,0.1) !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .danger-zone { background: rgba(239,68,68,0.05) !important; border-color: rgba(239,68,68,0.2) !important; }
+  html[data-theme="dark"] .danger-title { color: #F87171 !important; }
+  html[data-theme="dark"] .danger-desc { color: #A09080 !important; }
+  html[data-theme="dark"] .receipt-preview { background: #111 !important; border-color: rgba(255,255,255,0.08) !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .receipt-divider { border-color: rgba(255,255,255,0.1) !important; }
+</style>
+</head>
+<body>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<button id="sidebarToggle" aria-label="Toggle menu">
+  <span></span><span></span><span></span>
+</button>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main-content">
+    <header class="top-header">
+      <h1>Store Settings</h1>
+    </header>
+
+    <!-- ── TAB NAV ── -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('store')"    id="tabBtn-store">    <span class="tab-icon">🏪</span> Store Info</button>
+      <button class="tab-btn"        onclick="switchTab('receipt')"  id="tabBtn-receipt">  <span class="tab-icon">🧾</span> Receipt</button>
+      <button class="tab-btn"        onclick="switchTab('tax')"      id="tabBtn-tax">      <span class="tab-icon">💰</span> Tax & Fees</button>
+      <button class="tab-btn"        onclick="switchTab('appearance')"id="tabBtn-appearance"><span class="tab-icon">🎨</span> Appearance</button>
+      <button class="tab-btn"        onclick="switchTab('accounts')" id="tabBtn-accounts"> <span class="tab-icon">👥</span> Accounts</button>
+      <button class="tab-btn"        onclick="switchTab('system')"   id="tabBtn-system">   <span class="tab-icon">⚙️</span> System</button>
+    </div>
+
+    <div class="settings-body">
+
+      <!-- ══════════════ TAB: STORE INFO ══════════════ -->
+      <div class="tab-panel active" id="tab-store">
+
+        <div class="s-section-title">Store Information</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Basic Details</div>
+          <div class="s-card-sub">Displayed on receipts, reports, and the login screen.</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="s-label">Store Name</label>
+              <input type="text" class="s-input" id="storeName" placeholder="e.g. Padayon Kapetid">
+            </div>
+            <div class="form-group">
+              <label class="s-label">Branch / Location</label>
+              <input type="text" class="s-input" id="storeBranch" placeholder="e.g. Main Branch">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="s-label">Address Line 1</label>
+            <input type="text" class="s-input" id="storeAddr1" placeholder="Street, Barangay">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="s-label">City / Municipality</label>
+              <input type="text" class="s-input" id="storeCity" placeholder="e.g. Cebu City">
+            </div>
+            <div class="form-group">
+              <label class="s-label">Province / Region</label>
+              <input type="text" class="s-input" id="storeProvince" placeholder="e.g. Cebu">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="s-label">Phone Number</label>
+              <input type="text" class="s-input" id="storePhone" placeholder="+63 912 345 6789">
+            </div>
+            <div class="form-group">
+              <label class="s-label">Email Address</label>
+              <input type="email" class="s-input" id="storeEmail" placeholder="store@example.com">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="s-label">Website / Social (optional)</label>
+            <input type="text" class="s-input" id="storeWebsite" placeholder="e.g. facebook.com/padayon">
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Operating Hours</div>
+          <div class="s-card-sub">For display on receipts and info panels only.</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="s-label">Opening Time</label>
+              <input type="time" class="s-input" id="storeOpen" value="07:00">
+            </div>
+            <div class="form-group">
+              <label class="s-label">Closing Time</label>
+              <input type="time" class="s-input" id="storeClose" value="21:00">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="s-label">Open Days</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;" id="openDays">
+              <!-- days rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Business Registration</div>
+          <div class="s-card-sub">BIR and DTI info for official receipts.</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="s-label">TIN (Tax Identification Number)</label>
+              <input type="text" class="s-input" id="storeTIN" placeholder="000-000-000-000">
+            </div>
+            <div class="form-group">
+              <label class="s-label">DTI / SEC Registration No.</label>
+              <input type="text" class="s-input" id="storeDTI" placeholder="Optional">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ TAB: RECEIPT ══════════════ -->
+      <div class="tab-panel" id="tab-receipt">
+
+        <div class="s-section-title">Receipt Settings</div>
+
+        <div class="receipt-layout">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <div class="s-card">
+              <div class="s-card-title">Receipt Header</div>
+              <div class="s-card-sub">Text shown at the top of every printed receipt.</div>
+              <div class="form-group">
+                <label class="s-label">Header Line 1 (Store Name)</label>
+                <input type="text" class="s-input" id="rcptHeader1" placeholder="PADAYON KAPETID" oninput="updateReceiptPreview()">
+              </div>
+              <div class="form-group">
+                <label class="s-label">Header Line 2 (Tagline)</label>
+                <input type="text" class="s-input" id="rcptHeader2" placeholder="Your favourite coffee stop" oninput="updateReceiptPreview()">
+              </div>
+              <div class="form-group">
+                <label class="s-label">Address on Receipt</label>
+                <input type="text" class="s-input" id="rcptAddr" placeholder="Cebu City, Philippines" oninput="updateReceiptPreview()">
+              </div>
+            </div>
+
+            <div class="s-card">
+              <div class="s-card-title">Receipt Footer</div>
+              <div class="s-card-sub">Thank-you message and footer note.</div>
+              <div class="form-group">
+                <label class="s-label">Footer Message</label>
+                <textarea class="s-input" id="rcptFooter" rows="3" placeholder="Thank you for visiting! Come back soon ☕" oninput="updateReceiptPreview()"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="s-label">Show WiFi Password on Receipt</label>
+                <input type="text" class="s-input" id="rcptWifi" placeholder="WiFi: PadayonKapetid2024 (leave blank to hide)" oninput="updateReceiptPreview()">
+              </div>
+            </div>
+
+            <div class="s-card">
+              <div class="s-card-title">Receipt Options</div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <div class="toggle-label">Show order number</div>
+                  <div class="toggle-desc">Print the order # prominently on the receipt</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="rcptShowOrder" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <div class="toggle-label">Show cashier name</div>
+                  <div class="toggle-desc">Include the logged-in cashier's name</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="rcptShowCashier" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <div class="toggle-label">Show tax breakdown</div>
+                  <div class="toggle-desc">Print subtotal, VAT, and total separately</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="rcptShowTax" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <div class="toggle-label">Auto-print on order complete</div>
+                  <div class="toggle-desc">Trigger print dialog when order is marked done</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="rcptAutoPrint"><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- LIVE PREVIEW -->
+          <div>
+            <label class="s-label" style="margin-bottom:10px;display:block;">Live Preview</label>
+            <div class="receipt-preview" id="receiptPreview">
+              <div class="rp-store" id="rp-name">PADAYON KAPETID</div>
+              <div class="rp-addr" id="rp-tag">Your favourite coffee stop</div>
+              <div class="rp-addr" id="rp-addr">Cebu City, Philippines</div>
+              <hr class="rp-divider">
+              <div class="rp-addr">Order #0042 · Dine In</div>
+              <div class="rp-addr">Cashier: Maria Santos</div>
+              <div class="rp-addr">May 21, 2026  10:32 AM</div>
+              <hr class="rp-divider">
+              <div class="rp-row"><span>Iced Americano</span><span>₱80.00</span></div>
+              <div class="rp-row"><span>Matcha Latte</span><span>₱95.00</span></div>
+              <div class="rp-row"><span>Cheese Roll x2</span><span>₱70.00</span></div>
+              <hr class="rp-divider">
+              <div class="rp-row"><span>Subtotal</span><span>₱245.00</span></div>
+              <div class="rp-row"><span>VAT (12%)</span><span>₱29.40</span></div>
+              <div class="rp-row rp-total"><span>TOTAL</span><span>₱274.40</span></div>
+              <div class="rp-row"><span>Cash</span><span>₱300.00</span></div>
+              <div class="rp-row"><span>Change</span><span>₱25.60</span></div>
+              <hr class="rp-divider">
+              <div class="rp-footer" id="rp-footer">Thank you for visiting!<br>Come back soon ☕</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ TAB: TAX & FEES ══════════════ -->
+      <div class="tab-panel" id="tab-tax">
+
+        <div class="s-section-title">Tax & Pricing</div>
+
+        <div class="s-card">
+          <div class="s-card-title">VAT / Tax Rate</div>
+          <div class="s-card-sub">Applied to all orders. Philippine standard VAT is 12%.</div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Enable VAT</div>
+              <div class="toggle-desc">Automatically compute and add VAT to orders</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="taxEnabled" checked onchange="toggleTaxFields()"><span class="toggle-slider"></span></label>
+          </div>
+
+          <div id="taxFields" style="margin-top:16px;">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="s-label">VAT Rate (%)</label>
+                <input type="number" class="s-input" id="taxRate" value="12" min="0" max="100" step="0.01" placeholder="12">
+              </div>
+              <div class="form-group">
+                <label class="s-label">Tax Label on Receipt</label>
+                <input type="text" class="s-input" id="taxLabel" value="VAT" placeholder="VAT / GST / Tax">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="s-label">Tax Computation Method</label>
+              <select class="s-select" id="taxMethod">
+                <option value="exclusive">Tax-Exclusive (price + tax on top)</option>
+                <option value="inclusive">Tax-Inclusive (price already includes tax)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Discounts & Promos</div>
+          <div class="s-card-sub">Configure discount types available at checkout.</div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Senior Citizen Discount (20%)</div>
+              <div class="toggle-desc">SC ID required — applies to food & drinks only (RA 9994)</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="discSC" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">PWD Discount (20%)</div>
+              <div class="toggle-desc">PWD ID required (RA 10754)</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="discPWD" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Custom / Manual Discount</div>
+              <div class="toggle-desc">Allow cashiers to apply a custom % or fixed discount</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="discCustom"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Require manager approval for discounts</div>
+              <div class="toggle-desc">Cashiers must get admin PIN before applying any discount</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="discApproval"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Currency & Rounding</div>
+          <div class="s-card-sub">How amounts are displayed and rounded.</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="s-label">Currency Symbol</label>
+              <input type="text" class="s-input" id="currencySymbol" value="₱" placeholder="₱">
+            </div>
+            <div class="form-group">
+              <label class="s-label">Decimal Places</label>
+              <select class="s-select" id="decimalPlaces">
+                <option value="0">0 (e.g. ₱245)</option>
+                <option value="2" selected>2 (e.g. ₱245.00)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="s-label">Rounding Rule</label>
+            <select class="s-select" id="roundingRule">
+              <option value="none">No rounding</option>
+              <option value="nearest5">Round to nearest ₱0.05</option>
+              <option value="nearest1">Round to nearest ₱1.00</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Service Charge</div>
+          <div class="s-card-sub">Optional service charge added on top of order total.</div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Enable Service Charge</div>
+              <div class="toggle-desc">Adds a fixed % fee for dine-in orders</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="svcEnabled" onchange="toggleSvcFields()"><span class="toggle-slider"></span></label>
+          </div>
+          <div id="svcFields" style="margin-top:16px;display:none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="s-label">Service Charge Rate (%)</label>
+                <input type="number" class="s-input" id="svcRate" value="10" min="0" max="100" step="0.5">
+              </div>
+              <div class="form-group">
+                <label class="s-label">Apply To</label>
+                <select class="s-select" id="svcApplyTo">
+                  <option value="dine-in">Dine-In only</option>
+                  <option value="all">All order types</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ TAB: APPEARANCE ══════════════ -->
+      <div class="tab-panel" id="tab-appearance">
+
+        <div class="s-section-title">Appearance</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Theme Mode</div>
+          <div class="s-card-sub">Choose how the POS looks for staff. Applies across all pages.</div>
+          <div class="theme-grid">
+            <div class="theme-card active" id="themeLight" onclick="setTheme('light')">
+              <div class="theme-preview">
+                <div class="theme-preview-light" style="display:flex;gap:8px;width:100%;">
+                  <div class="tp-sidebar"></div>
+                  <div class="tp-content">
+                    <div class="tp-bar"></div>
+                    <div class="tp-grid">
+                      <div class="tp-card-l"></div><div class="tp-card-l"></div><div class="tp-card-l"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="theme-foot"><span class="theme-label">☀ Light Mode</span></div>
+            </div>
+            <div class="theme-card" id="themeDark" onclick="setTheme('dark')">
+              <div class="theme-preview">
+                <div class="theme-preview-dark" style="width:100%;">
+                  <div class="tp-sidebar-d"></div>
+                  <div class="tp-content-d">
+                    <div class="tp-bar-d"></div>
+                    <div class="tp-grid-d">
+                      <div class="tp-card-d"></div><div class="tp-card-d"></div><div class="tp-card-d"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="theme-foot"><span class="theme-label">🌙 Dark Mode</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Banner Images</div>
+          <div class="s-card-sub">Upload custom images for the hero banner and promo strip on the Order System page.</div>
+          <div class="banner-grid">
+            <div class="banner-slot">
+              <div class="banner-slot-label">🔝 Top Hero Banner</div>
+              <div class="preview-box" id="heroPrev">
+                <div class="preview-placeholder" id="heroPlaceholder"><span>🖼️</span>No image set<br><small>Upload below</small></div>
+                <img id="heroPreviewImg" style="display:none;" alt="Hero preview">
+                <button class="preview-remove" onclick="removeBanner('hero')" title="Remove image">✕</button>
+              </div>
+              <div class="upload-zone" id="heroZone"
+                   ondragover="dragOver(event,'heroZone')" ondragleave="dragLeave('heroZone')" ondrop="dropFile(event,'hero')">
+                <input type="file" accept="image/*" onchange="fileChosen(event,'hero')" id="heroInput">
+                <div class="upload-icon">📁</div>
+                <div class="upload-hint"><strong>Click to choose</strong> or drag & drop<br>JPG, PNG, WEBP · Max 5MB</div>
+              </div>
+            </div>
+            <div class="banner-slot">
+              <div class="banner-slot-label">⬇ Bottom Promo Strip</div>
+              <div class="preview-box" id="promoPrev">
+                <div class="preview-placeholder" id="promoPlaceholder"><span>🖼️</span>No image set<br><small>Upload below</small></div>
+                <img id="promoPreviewImg" style="display:none;" alt="Promo preview">
+                <button class="preview-remove" onclick="removeBanner('promo')" title="Remove image">✕</button>
+              </div>
+              <div class="upload-zone" id="promoZone"
+                   ondragover="dragOver(event,'promoZone')" ondragleave="dragLeave('promoZone')" ondrop="dropFile(event,'promo')">
+                <input type="file" accept="image/*" onchange="fileChosen(event,'promo')" id="promoInput">
+                <div class="upload-icon">📁</div>
+                <div class="upload-hint"><strong>Click to choose</strong> or drag & drop<br>JPG, PNG, WEBP · Max 5MB</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════ TAB: ACCOUNTS ══════════════ -->
+      <div class="tab-panel" id="tab-accounts">
+
+        <div class="s-section-title">Account Management</div>
+
+        <div class="info-box">
+          <span class="info-icon">ℹ️</span>
+          <span>Accounts are saved directly to the <strong>database</strong> and take effect immediately. Password changes apply on next login.</span>
+        </div>
+
+        <div class="s-card">
+          <div class="acct-header">
+            <div>
+              <div class="s-card-title">Staff Accounts</div>
+              <div class="s-card-sub" style="margin-bottom:0">Manage admin and cashier access to the POS system.</div>
+            </div>
+            <button class="add-acct-btn" onclick="openAddAccount()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Account
+            </button>
+          </div>
+
+          <table class="acct-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Last Login</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="acctTableBody">
+              <!-- rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- ══════════════ TAB: SYSTEM ══════════════ -->
+      <div class="tab-panel" id="tab-system">
+
+        <div class="s-section-title">System Preferences</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Order Settings</div>
+          <div class="s-card-sub">General POS behaviour and order flow.</div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Require table number for Dine-In</div>
+              <div class="toggle-desc">Cashier must enter a table number before placing dine-in orders</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="sysRequireTable" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Require customer name</div>
+              <div class="toggle-desc">Show customer name field when creating an order</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="sysRequireName"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Enable order notes field</div>
+              <div class="toggle-desc">Let cashiers add special instructions per order</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="sysOrderNotes" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Allow order cancellation by cashier</div>
+              <div class="toggle-desc">If off, only admins can cancel placed orders</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="sysCashierCancel" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Session & Security</div>
+          <div class="s-card-sub">Control login and idle behaviour.</div>
+
+          <div class="form-group">
+            <label class="s-label">Auto Logout After Inactivity</label>
+            <select class="s-select" id="sysAutoLogout">
+              <option value="0">Never</option>
+              <option value="15">15 minutes</option>
+              <option value="30" selected>30 minutes</option>
+              <option value="60">1 hour</option>
+              <option value="120">2 hours</option>
+            </select>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Require re-login after logout</div>
+              <div class="toggle-desc">Always show login screen — don't remember session</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="sysRequireLogin" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Admin PIN for sensitive actions</div>
+              <div class="toggle-desc">Require 4-digit PIN for voids, refunds, and discounts</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="sysAdminPin"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Data & Storage</div>
+          <div class="s-card-sub">Manage local browser data used by the POS in demo mode.</div>
+
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Remember last used tab on each page</div>
+              <div class="toggle-desc">Saves which category / view was last open</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="sysRememberTab" checked><span class="toggle-slider"></span></label>
+          </div>
+
+          <hr class="divider">
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;">
+            <button class="acct-btn" onclick="exportSettings()">📤 Export Settings JSON</button>
+            <button class="acct-btn" onclick="document.getElementById('importFile').click()">📥 Import Settings</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" onchange="importSettings(event)">
+            <button class="acct-btn danger" onclick="clearAllData()">🗑 Clear All Local Data</button>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">About This POS</div>
+          <div class="s-card-sub">Version and system information.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text-light)">App Name</span><span style="color:var(--text-dark);font-weight:600">Padayon Kapetid POS</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text-light)">Version</span><span style="color:var(--text-dark);font-weight:600">v2.0.0</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text-light)">Build Date</span><span style="color:var(--text-dark);font-weight:600">May 2026</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text-light)">Mode</span><span style="color:#A07830;font-weight:600;background:rgba(200,169,110,0.12);padding:2px 9px;border-radius:20px;font-size:11px;">Demo / Local</span></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /settings-body -->
+
+    <!-- ── SAVE BAR ── -->
+    <div class="save-bar">
+      <div class="save-bar-info">
+        Changes are saved to <strong>this browser</strong> and apply across all POS pages.
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="reset-btn" onclick="resetAll()">Reset All</button>
+        <button class="save-btn" onclick="saveAll()">Save Settings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- Add / Edit Account Modal -->
+<div class="modal-overlay" id="modalAccount">
+  <div class="modal-box">
+    <h2 id="modalAccountTitle">Add Account</h2>
+    <div class="modal-sub" id="modalAccountSub">Create a new staff account for the POS.</div>
+
+    <input type="hidden" id="editAccountId">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="s-label">Full Name</label>
+        <input type="text" class="s-input" id="acctFullName" placeholder="e.g. Maria Santos">
+      </div>
+      <div class="form-group">
+        <label class="s-label">Username</label>
+        <input type="text" class="s-input" id="acctUsername" placeholder="e.g. maria_s">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="s-label">Role</label>
+      <select class="s-select" id="acctRole">
+        <option value="cashier">Cashier — Can take orders and view order list</option>
+        <option value="admin">Admin — Full access to all settings and reports</option>
+      </select>
+    </div>
+
+    <hr class="divider">
+
+    <div class="form-group">
+      <label class="s-label">Password <span id="passOptional" style="color:var(--text-light);font-weight:400;text-transform:none;letter-spacing:0">(leave blank to keep current)</span></label>
+      <input type="password" class="s-input" id="acctPassword" placeholder="Min. 6 characters" oninput="checkPassStrength()">
+      <div class="pass-strength"><div class="pass-strength-bar" id="passStrengthBar"></div></div>
+    </div>
+    <div class="form-group">
+      <label class="s-label">Confirm Password</label>
+      <input type="password" class="s-input" id="acctConfirm" placeholder="Re-enter password">
+    </div>
+
+    <div class="form-group">
+      <label class="s-label">Status</label>
+      <select class="s-select" id="acctStatus">
+        <option value="active">Active — Can log in</option>
+        <option value="inactive">Inactive — Cannot log in</option>
+      </select>
+    </div>
+
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal('modalAccount')">Cancel</button>
+      <button class="modal-save" onclick="saveAccount()">Save Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="modalDelete">
+  <div class="modal-box">
+    <h2>Delete Account</h2>
+    <div class="modal-sub">This action cannot be undone. The staff member will lose access immediately.</div>
+    <input type="hidden" id="deleteAccountId">
+    <div class="info-box" style="margin-top:4px;">
+      <span class="info-icon">⚠️</span>
+      <span>You are about to delete <strong id="deleteAccountName"></strong>. Order history created by this account will be preserved.</span>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal('modalDelete')">Cancel</button>
+      <button class="modal-danger" onclick="confirmDelete()">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<div id="offlineBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99998;background:#78350F;color:#FDE68A;font-size:13px;font-weight:600;padding:8px 20px 8px 70px;display:none;align-items:center;gap:10px;border-bottom:1px solid rgba(253,230,138,0.3);">
+  <span style="font-size:15px;">⚠️</span>
+  <span>Running in <strong>demo mode</strong> — PHP backend not connected. Settings are saved locally only and will not persist across devices.</span>
+  <button onclick="document.getElementById('offlineBanner').style.display='none'" style="margin-left:auto;background:none;border:1px solid rgba(253,230,138,0.4);color:#FDE68A;border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;">Dismiss</button>
+</div>
+
+<script src="js/auth-check.js"></script>
+<script>
+const _user = requireLogin(['admin']);
+if (_user) buildNav('store-settings', _user);
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   STORE SETTINGS — DB-first, no localStorage dependency
+   ═══════════════════════════════════════════════════ */
+
+const SETTINGS_API = './php/settings.php';
+const USERS_API    = './php/users.php';
+
+// ── TABS ──────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('tabBtn-' + name).classList.add('active');
+  localStorage.setItem('pk_settings_tab', name); // tab memory is fine in localStorage
+}
+
+// ── OPEN DAYS WIDGET ─────────────────────────────
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+let openDaysSelected = new Set(['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
+
+function renderDays() {
+  const container = document.getElementById('openDays');
+  container.innerHTML = '';
+  DAYS.forEach(d => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = d;
+    btn.style.cssText = `padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid;cursor:pointer;transition:0.14s;`;
+    const on = openDaysSelected.has(d);
+    btn.style.background  = on ? 'var(--primary)' : 'transparent';
+    btn.style.color       = on ? '#F5F0E8' : 'var(--text-mid)';
+    btn.style.borderColor = on ? 'var(--primary)' : 'var(--border)';
+    btn.onclick = () => {
+      if (openDaysSelected.has(d)) openDaysSelected.delete(d);
+      else openDaysSelected.add(d);
+      renderDays();
+    };
+    container.appendChild(btn);
+  });
+}
+
+// ── RECEIPT PREVIEW ──────────────────────────────
+function updateReceiptPreview() {
+  const name   = document.getElementById('rcptHeader1').value || 'PADAYON KAPETID';
+  const tag    = document.getElementById('rcptHeader2').value || 'Your favourite coffee stop';
+  const addr   = document.getElementById('rcptAddr').value   || 'Cebu City, Philippines';
+  const footer = document.getElementById('rcptFooter').value || 'Thank you for visiting!\nCome back soon ☕';
+  const wifi   = document.getElementById('rcptWifi').value;
+  document.getElementById('rp-name').textContent = name;
+  document.getElementById('rp-tag').textContent  = tag;
+  document.getElementById('rp-addr').textContent = addr;
+  document.getElementById('rp-footer').innerHTML = footer.replace(/\n/g,'<br>') + (wifi ? `<br><br>📶 ${wifi}` : '');
+}
+
+// ── THEME ─────────────────────────────────────────
+let currentTheme = 'light';
+function setTheme(mode) {
+  currentTheme = mode;
+  document.documentElement.setAttribute('data-theme', mode);
+  localStorage.setItem('pk_theme', mode); // keep for instant flash-prevention
+  document.getElementById('themeLight').classList.toggle('active', mode === 'light');
+  document.getElementById('themeDark').classList.toggle('active',  mode === 'dark');
+}
+
+// ── BANNERS — upload to server (avoids localStorage quota bug) ───────────────
+function fileChosen(e, slot) { const f = e.target.files[0]; if (f) uploadBannerFile(f, slot); }
+function dragOver(e, zoneId) { e.preventDefault(); document.getElementById(zoneId).classList.add('drag-over'); }
+function dragLeave(zoneId)   { document.getElementById(zoneId).classList.remove('drag-over'); }
+function dropFile(e, slot) {
+  e.preventDefault();
+  const zoneId = slot === 'hero' ? 'heroZone' : 'promoZone';
+  document.getElementById(zoneId).classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (!f || !f.type.startsWith('image/')) { showToast('Please drop an image file', 'error'); return; }
+  uploadBannerFile(f, slot);
+}
+
+async function uploadBannerFile(file, slot) {
+  if (file.size > 5 * 1024 * 1024) { showToast('File too large — max 5 MB', 'error'); return; }
+
+  // Show local preview immediately
+  const reader = new FileReader();
+  reader.onload = ev => showBannerPreview(slot, ev.target.result);
+  reader.readAsDataURL(file);
+
+  const zone = document.getElementById(slot === 'hero' ? 'heroZone' : 'promoZone');
+  zone.style.opacity = '0.5';
+  zone.style.pointerEvents = 'none';
+  showToast('⏳ Uploading banner…');
+
+  try {
+    const fd = new FormData();
+    fd.append('slot', slot);
+    fd.append('image', file);
+    const res  = await fetch(SETTINGS_API + '?action=upload_banner', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Upload failed');
+    showToast('✅ ' + data.message, 'success');
+  } catch(err) {
+    showToast('❌ ' + err.message, 'error');
+  } finally {
+    zone.style.opacity = '';
+    zone.style.pointerEvents = '';
+    const inp = document.getElementById(slot === 'hero' ? 'heroInput' : 'promoInput');
+    if (inp) inp.value = '';
+  }
+}
+
+function showBannerPreview(slot, src) {
+  const img = document.getElementById(slot === 'hero' ? 'heroPreviewImg' : 'promoPreviewImg');
+  const ph  = document.getElementById(slot === 'hero' ? 'heroPlaceholder' : 'promoPlaceholder');
+  img.src = src; img.style.display = 'block'; ph.style.display = 'none';
+}
+
+async function removeBanner(slot) {
+  const img = document.getElementById(slot === 'hero' ? 'heroPreviewImg' : 'promoPreviewImg');
+  const ph  = document.getElementById(slot === 'hero' ? 'heroPlaceholder' : 'promoPlaceholder');
+  img.style.display = 'none'; img.src = ''; ph.style.display = 'flex';
+  const inp = document.getElementById(slot === 'hero' ? 'heroInput' : 'promoInput');
+  if (inp) inp.value = '';
+  try {
+    await fetch(SETTINGS_API + '?action=delete_banner', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ slot })
+    });
+    showToast('Banner removed.', 'success');
+  } catch(e) { showToast('Banner removed locally.'); }
+}
+
+// ── TAX / SERVICE CHARGE TOGGLES ─────────────────
+function toggleTaxFields() {
+  document.getElementById('taxFields').style.display = document.getElementById('taxEnabled').checked ? 'block' : 'none';
+}
+function toggleSvcFields() {
+  document.getElementById('svcFields').style.display = document.getElementById('svcEnabled').checked ? 'block' : 'none';
+}
+
+/* ═══════════════════════════════════════════════════
+   SAVE ALL — sends every field as flat key→value to DB
+   ═══════════════════════════════════════════════════ */
+async function saveAll() {
+  const btn = document.querySelector('.save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  // Collect ALL settings as a flat object — each field is its own DB row
+  const settings = {
+    // Store Info
+    store_name:     document.getElementById('storeName').value,
+    store_branch:   document.getElementById('storeBranch').value,
+    store_addr1:    document.getElementById('storeAddr1').value,
+    store_city:     document.getElementById('storeCity').value,
+    store_province: document.getElementById('storeProvince').value,
+    store_phone:    document.getElementById('storePhone').value,
+    store_email:    document.getElementById('storeEmail').value,
+    store_website:  document.getElementById('storeWebsite').value,
+    store_open:     document.getElementById('storeOpen').value,
+    store_close:    document.getElementById('storeClose').value,
+    store_open_days: [...openDaysSelected],   // array → JSON in DB
+    store_tin:      document.getElementById('storeTIN').value,
+    store_dti:      document.getElementById('storeDTI').value,
+    // Receipt
+    rcpt_header1:     document.getElementById('rcptHeader1').value,
+    rcpt_header2:     document.getElementById('rcptHeader2').value,
+    rcpt_addr:        document.getElementById('rcptAddr').value,
+    rcpt_footer:      document.getElementById('rcptFooter').value,
+    rcpt_wifi:        document.getElementById('rcptWifi').value,
+    rcpt_show_order:   document.getElementById('rcptShowOrder').checked,
+    rcpt_show_cashier: document.getElementById('rcptShowCashier').checked,
+    rcpt_show_tax:     document.getElementById('rcptShowTax').checked,
+    rcpt_auto_print:   document.getElementById('rcptAutoPrint').checked,
+    // Tax
+    tax_enabled:      document.getElementById('taxEnabled').checked,
+    tax_rate:         document.getElementById('taxRate').value,
+    tax_label:        document.getElementById('taxLabel').value,
+    tax_method:       document.getElementById('taxMethod').value,
+    disc_sc:          document.getElementById('discSC').checked,
+    disc_pwd:         document.getElementById('discPWD').checked,
+    disc_custom:      document.getElementById('discCustom').checked,
+    disc_approval:    document.getElementById('discApproval').checked,
+    currency_symbol:  document.getElementById('currencySymbol').value,
+    decimal_places:   document.getElementById('decimalPlaces').value,
+    rounding_rule:    document.getElementById('roundingRule').value,
+    svc_enabled:      document.getElementById('svcEnabled').checked,
+    svc_rate:         document.getElementById('svcRate').value,
+    svc_apply_to:     document.getElementById('svcApplyTo').value,
+    // Appearance
+    theme:            currentTheme,
+    // System
+    sys_require_table:  document.getElementById('sysRequireTable').checked,
+    sys_require_name:   document.getElementById('sysRequireName').checked,
+    sys_order_notes:    document.getElementById('sysOrderNotes').checked,
+    sys_cashier_cancel: document.getElementById('sysCashierCancel').checked,
+    sys_auto_logout:    document.getElementById('sysAutoLogout').value,
+    sys_require_login:  document.getElementById('sysRequireLogin').checked,
+    sys_admin_pin:      document.getElementById('sysAdminPin').checked,
+    sys_remember_tab:   document.getElementById('sysRememberTab').checked,
+  };
+
+  try {
+    const res  = await fetch(SETTINGS_API + '?action=save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Save failed');
+    // Also keep theme in localStorage for instant flash-prevention on page load
+    localStorage.setItem('pk_theme', currentTheme);
+    showToast('✅ Settings saved to database!', 'success');
+  } catch(err) {
+    // PHP unavailable — save to localStorage as fallback
+    try {
+      localStorage.setItem('pk_settings_local', JSON.stringify(settings));
+      localStorage.setItem('pk_theme', currentTheme);
+      showToast('💾 Saved locally (PHP not connected)', 'warn');
+    } catch(le) {
+      showToast('❌ Could not save: ' + err.message, 'error');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Settings';
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   LOAD ALL — reads flat rows from DB and fills the form
+   ═══════════════════════════════════════════════════ */
+async function loadSaved() {
+  let s = {};
+  try {
+    const res  = await fetch(SETTINGS_API + '?action=load');
+    const data = await res.json();
+    if (res.ok && data.success && data.settings) {
+      s = data.settings;
+      showToast('✅ Connected to database', 'success');
+    }
+  } catch(e) {
+    showOfflineBanner();
+    // Try to restore from localStorage fallback
+    try {
+      const local = localStorage.getItem('pk_settings_local');
+      if (local) s = JSON.parse(local);
+    } catch(_) {}
+  }
+
+  // Helper — safely get a value from DB response
+  const g = (key, fallback = '') => (s[key] !== undefined && s[key] !== null && s[key] !== '') ? s[key] : fallback;
+  const gb = (key, fallback = false) => {
+    const v = s[key];
+    if (v === undefined || v === null || v === '') return fallback;
+    if (typeof v === 'boolean') return v;
+    if (v === 'true' || v === '1' || v === 1) return true;
+    if (v === 'false' || v === '0' || v === 0) return false;
+    return fallback;
+  };
+
+  // Theme
+  const theme = g('theme', localStorage.getItem('pk_theme') || 'light');
+  setTheme(theme);
+
+  // Store Info
+  document.getElementById('storeName').value     = g('store_name');
+  document.getElementById('storeBranch').value   = g('store_branch');
+  document.getElementById('storeAddr1').value    = g('store_addr1');
+  document.getElementById('storeCity').value     = g('store_city');
+  document.getElementById('storeProvince').value = g('store_province');
+  document.getElementById('storePhone').value    = g('store_phone');
+  document.getElementById('storeEmail').value    = g('store_email');
+  document.getElementById('storeWebsite').value  = g('store_website');
+  document.getElementById('storeOpen').value     = g('store_open', '07:00');
+  document.getElementById('storeClose').value    = g('store_close', '21:00');
+  document.getElementById('storeTIN').value      = g('store_tin');
+  document.getElementById('storeDTI').value      = g('store_dti');
+
+  // Open days — stored as JSON array
+  const days = s['store_open_days'];
+  if (Array.isArray(days) && days.length) openDaysSelected = new Set(days);
+
+  // Receipt
+  document.getElementById('rcptHeader1').value = g('rcpt_header1');
+  document.getElementById('rcptHeader2').value = g('rcpt_header2');
+  document.getElementById('rcptAddr').value    = g('rcpt_addr');
+  document.getElementById('rcptFooter').value  = g('rcpt_footer');
+  document.getElementById('rcptWifi').value    = g('rcpt_wifi');
+  document.getElementById('rcptShowOrder').checked   = gb('rcpt_show_order',   true);
+  document.getElementById('rcptShowCashier').checked = gb('rcpt_show_cashier', true);
+  document.getElementById('rcptShowTax').checked     = gb('rcpt_show_tax',     true);
+  document.getElementById('rcptAutoPrint').checked   = gb('rcpt_auto_print',   false);
+
+  // Tax
+  document.getElementById('taxEnabled').checked    = gb('tax_enabled', true);
+  document.getElementById('taxRate').value          = g('tax_rate', '12');
+  document.getElementById('taxLabel').value         = g('tax_label', 'VAT');
+  document.getElementById('taxMethod').value        = g('tax_method', 'exclusive');
+  document.getElementById('discSC').checked         = gb('disc_sc',  true);
+  document.getElementById('discPWD').checked        = gb('disc_pwd', true);
+  document.getElementById('discCustom').checked     = gb('disc_custom', false);
+  document.getElementById('discApproval').checked   = gb('disc_approval', false);
+  document.getElementById('currencySymbol').value   = g('currency_symbol', '₱');
+  document.getElementById('decimalPlaces').value    = g('decimal_places', '2');
+  document.getElementById('roundingRule').value     = g('rounding_rule', 'none');
+  document.getElementById('svcEnabled').checked     = gb('svc_enabled', false);
+  document.getElementById('svcRate').value          = g('svc_rate', '10');
+  document.getElementById('svcApplyTo').value       = g('svc_apply_to', 'dine-in');
+  toggleTaxFields();
+  toggleSvcFields();
+
+  // System
+  document.getElementById('sysRequireTable').checked  = gb('sys_require_table',  true);
+  document.getElementById('sysRequireName').checked   = gb('sys_require_name',   false);
+  document.getElementById('sysOrderNotes').checked    = gb('sys_order_notes',    true);
+  document.getElementById('sysCashierCancel').checked = gb('sys_cashier_cancel', true);
+  document.getElementById('sysAutoLogout').value      = g('sys_auto_logout', '30');
+  document.getElementById('sysRequireLogin').checked  = gb('sys_require_login', true);
+  document.getElementById('sysAdminPin').checked      = gb('sys_admin_pin', false);
+  document.getElementById('sysRememberTab').checked   = gb('sys_remember_tab', true);
+
+  // Banners
+  const heroBanner  = g('banner_hero');
+  const promoBanner = g('banner_promo');
+  if (heroBanner)  showBannerPreview('hero',  heroBanner);
+  if (promoBanner) showBannerPreview('promo', promoBanner);
+
+  // Restore last active tab
+  const lastTab = localStorage.getItem('pk_settings_tab') || 'store';
+  switchTab(lastTab);
+
+  updateReceiptPreview();
+  renderDays();
+}
+
+/* ═══════════════════════════════════════════════════
+   ACCOUNT MANAGEMENT — php/users.php
+   ═══════════════════════════════════════════════════ */
+let accounts = [];
+
+async function loadAccounts() {
+  const tbody = document.getElementById('acctTableBody');
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-light);">Loading…</td></tr>`;
+  try {
+    const res  = await fetch(`${USERS_API}?action=list`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to load accounts');
+    accounts = data;
+    renderAccounts();
+  } catch(e) {
+    // Demo fallback
+    accounts = [
+      { id:1, full_name:'Administrator', username:'admin',   role:'admin',   is_active:true,  last_login:'—' },
+      { id:2, full_name:'Juan Abubakar', username:'cashier', role:'cashier', is_active:true,  last_login:'—' },
+    ];
+    renderAccounts();
+    showToast('ℹ️ Accounts shown in demo mode', 'warn');
+  }
+}
+
+function renderAccounts() {
+  const tbody = document.getElementById('acctTableBody');
+  if (!accounts.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-light);">No accounts found.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = accounts.map(a => {
+    const initials = a.full_name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const avatarBg = a.role === 'admin' ? '#1A1A1A' : '#2D6A4F';
+    const isActive = a.is_active === true || a.is_active === 1 || a.is_active === '1';
+    const me = JSON.parse(sessionStorage.getItem('pos_user') || '{}');
+    const isSelf = String(me.id) === String(a.id);
+    return `
+    <tr class="acct-row">
+      <td>
+        <div class="acct-name-cell">
+          <div class="acct-avatar" style="background:${avatarBg}">${initials}</div>
+          <div>
+            <div class="acct-name">${escHtml(a.full_name)}${isSelf ? ' <span style="font-size:10px;color:var(--accent)">(you)</span>' : ''}</div>
+            <div class="acct-username">@${escHtml(a.username)}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge badge-${a.role}">${a.role === 'admin' ? '🛡 Admin' : '🧾 Cashier'}</span></td>
+      <td><span class="badge badge-${isActive ? 'active' : 'inactive'}">${isActive ? '● Active' : '○ Inactive'}</span></td>
+      <td style="color:var(--text-light);font-size:12.5px">${a.last_login || '—'}</td>
+      <td>
+        <div class="acct-actions">
+          <button class="acct-btn" onclick="openEditAccount(${a.id})">✏️ Edit</button>
+          ${isSelf ? '' : `<button class="acct-btn danger" onclick="openDeleteAccount(${a.id})">🗑</button>`}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openAddAccount() {
+  document.getElementById('modalAccountTitle').textContent = 'Add Account';
+  document.getElementById('modalAccountSub').textContent   = 'Create a new staff account.';
+  document.getElementById('editAccountId').value   = '';
+  document.getElementById('acctFullName').value    = '';
+  document.getElementById('acctUsername').value    = '';
+  document.getElementById('acctRole').value        = 'cashier';
+  document.getElementById('acctPassword').value    = '';
+  document.getElementById('acctConfirm').value     = '';
+  document.getElementById('acctStatus').value      = 'active';
+  document.getElementById('passOptional').style.display = 'none';
+  document.getElementById('passStrengthBar').style.width = '0';
+  openModal('modalAccount');
+}
+function openEditAccount(id) {
+  const a = accounts.find(x => String(x.id) === String(id));
+  if (!a) return;
+  const isActive = a.is_active === true || a.is_active === 1 || a.is_active === '1';
+  document.getElementById('modalAccountTitle').textContent = 'Edit Account';
+  document.getElementById('modalAccountSub').textContent   = `Updating: ${a.full_name}`;
+  document.getElementById('editAccountId').value   = a.id;
+  document.getElementById('acctFullName').value    = a.full_name;
+  document.getElementById('acctUsername').value    = a.username;
+  document.getElementById('acctRole').value        = a.role;
+  document.getElementById('acctPassword').value    = '';
+  document.getElementById('acctConfirm').value     = '';
+  document.getElementById('acctStatus').value      = isActive ? 'active' : 'inactive';
+  document.getElementById('passOptional').style.display = 'inline';
+  document.getElementById('passStrengthBar').style.width = '0';
+  openModal('modalAccount');
+}
+async function saveAccount() {
+  const id       = document.getElementById('editAccountId').value;
+  const fullName = document.getElementById('acctFullName').value.trim();
+  const username = document.getElementById('acctUsername').value.trim();
+  const role     = document.getElementById('acctRole').value;
+  const password = document.getElementById('acctPassword').value;
+  const confirm  = document.getElementById('acctConfirm').value;
+  const status   = document.getElementById('acctStatus').value;
+
+  if (!fullName || !username) { showToast('Full name and username are required.', 'error'); return; }
+  if (!id && !password)       { showToast('Password required for new accounts.', 'error'); return; }
+  if (password && password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+  if (password && password !== confirm) { showToast('Passwords do not match.', 'error'); return; }
+
+  const saveBtn = document.querySelector('#modalAccount .modal-save');
+  saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+
+  const payload = { full_name: fullName, username, role, is_active: status === 'active' };
+  if (password) payload.password = password;
+  if (id) payload.id = parseInt(id);
+
+  try {
+    const res  = await fetch(`${USERS_API}?action=${id ? 'update' : 'create'}`, {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Save failed');
+    showToast('✅ ' + data.message, 'success');
+    closeModal('modalAccount');
+    loadAccounts();
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+  } finally {
+    saveBtn.disabled = false; saveBtn.textContent = 'Save Account';
+  }
+}
+function openDeleteAccount(id) {
+  const a = accounts.find(x => String(x.id) === String(id));
+  if (!a) return;
+  document.getElementById('deleteAccountId').value = id;
+  document.getElementById('deleteAccountName').textContent = a.full_name;
+  openModal('modalDelete');
+}
+async function confirmDelete() {
+  const id  = parseInt(document.getElementById('deleteAccountId').value);
+  const btn = document.querySelector('#modalDelete .modal-danger');
+  btn.disabled = true; btn.textContent = 'Deleting…';
+  try {
+    const res  = await fetch(`${USERS_API}?action=delete`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Delete failed');
+    closeModal('modalDelete');
+    showToast('✅ ' + data.message, 'success');
+    loadAccounts();
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Delete Account';
+  }
+}
+
+function checkPassStrength() {
+  const p = document.getElementById('acctPassword').value;
+  const bar = document.getElementById('passStrengthBar');
+  let score = 0;
+  if (p.length >= 6) score++;
+  if (p.length >= 10) score++;
+  if (/[A-Z]/.test(p)) score++;
+  if (/[0-9]/.test(p)) score++;
+  if (/[^a-zA-Z0-9]/.test(p)) score++;
+  const colors = ['#DC2626','#DC2626','#D97706','#C8A96E','#2D6A4F'];
+  bar.style.width = (score * 20) + '%';
+  bar.style.background = colors[Math.min(score-1, 4)] || 'transparent';
+}
+
+// ── MODAL HELPERS ─────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+});
+
+// ── RESET ALL ─────────────────────────────────────
+function resetAll() {
+  if (!confirm('Reset ALL settings to defaults? This cannot be undone.')) return;
+  localStorage.removeItem('pk_settings_tab');
+  localStorage.removeItem('pk_theme');
+  location.reload();
+}
+
+// ── EXPORT / IMPORT (local convenience) ──────────
+async function exportSettings() {
+  try {
+    const res  = await fetch(SETTINGS_API + '?action=load');
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data.settings || {}, null, 2)], {type:'application/json'});
+    const a    = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'padayon_settings_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    showToast('Settings exported!', 'success');
+  } catch(e) { showToast('Export failed: ' + e.message, 'error'); }
+}
+function importSettings(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      const res  = await fetch(SETTINGS_API + '?action=save', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error);
+      showToast('✅ Settings imported! Reloading…', 'success');
+      setTimeout(() => location.reload(), 1200);
+    } catch(err) { showToast('Import failed: ' + err.message, 'error'); }
+  };
+  reader.readAsText(file);
+}
+function clearAllData() {
+  if (!confirm('This will clear local browser data only. DB settings are unaffected.')) return;
+  localStorage.clear();
+  showToast('Local data cleared. Reloading…');
+  setTimeout(() => location.reload(), 1200);
+}
+
+// ── TOAST ─────────────────────────────────────────
+function showToast(msg, type='') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  const dur = (type === 'warn' || type === 'info') ? 4500 : 3200;
+  setTimeout(() => t.remove(), dur);
+}
+
+function showOfflineBanner() {
+  const b = document.getElementById('offlineBanner');
+  if (b) b.style.display = 'flex';
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INIT ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadSaved();
+  await loadAccounts();
+});
+</script>
+</body>
+</html>

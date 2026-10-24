@@ -1,0 +1,136 @@
+-- -- Padayon Kapetid POS — Full Database Schema
+-- -- Run this in phpMyAdmin SQL tab
+
+-- CREATE DATABASE IF NOT EXISTS restaurant_pos CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE restaurant_pos;
+
+-- -- ── USERS TABLE ──────────────────────────────────────────────────
+-- CREATE TABLE IF NOT EXISTS users (
+--     id         INT AUTO_INCREMENT PRIMARY KEY,
+--     username   VARCHAR(60) NOT NULL UNIQUE,
+--     password   VARCHAR(255) NOT NULL,         -- bcrypt hash
+--     full_name  VARCHAR(150) NOT NULL,
+--     role       ENUM('admin','cashier') DEFAULT 'cashier',
+--     is_active  TINYINT(1) DEFAULT 1,
+--     last_login TIMESTAMP NULL,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- Default accounts (password: admin123 / cashier123)
+-- INSERT INTO users (username, password, full_name, role) VALUES
+-- ('admin',   '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator', 'admin'),
+-- ('cashier', '$2y$10$TKh8H1.PvYxDn.RQgQu7fuHHG9JGRpMPJqzXqZ.3g4bX9v3Yy2kSu', 'Juan Abubakar', 'cashier');
+-- -- admin password: password  |  cashier password: password
+-- -- To set custom passwords, run in phpMyAdmin:
+-- -- UPDATE users SET password = '$2y$10$...' WHERE username = 'admin';
+
+-- -- ── CATEGORIES ───────────────────────────────────────────────────
+-- CREATE TABLE IF NOT EXISTS categories (
+--     id         INT AUTO_INCREMENT PRIMARY KEY,
+--     name       VARCHAR(100) NOT NULL,
+--     icon       VARCHAR(10) DEFAULT '🍽️',
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- ── MENU ITEMS ───────────────────────────────────────────────────
+-- CREATE TABLE IF NOT EXISTS menu_items (
+--     id           INT AUTO_INCREMENT PRIMARY KEY,
+--     category_id  INT,
+--     name         VARCHAR(150) NOT NULL,
+--     description  TEXT,
+--     price        DECIMAL(10,2) NOT NULL,
+--     image_url    VARCHAR(500) DEFAULT NULL,
+--     is_available TINYINT(1) DEFAULT 1,
+--     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+-- );
+
+-- -- ── ORDERS ───────────────────────────────────────────────────────
+-- CREATE TABLE IF NOT EXISTS orders (
+--     id            INT AUTO_INCREMENT PRIMARY KEY,
+--     customer_name VARCHAR(150),
+--     table_number  VARCHAR(20),
+--     order_type    ENUM('dine-in','takeout','delivery') DEFAULT 'dine-in',
+--     status        ENUM('pending','preparing','ready','completed','cancelled') DEFAULT 'pending',
+--     subtotal      DECIMAL(10,2) DEFAULT 0,
+--     tax           DECIMAL(10,2) DEFAULT 0,
+--     total         DECIMAL(10,2) DEFAULT 0,
+--     notes         TEXT,
+--     created_by    INT NULL,
+--     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+-- );
+
+-- -- ── ORDER ITEMS ──────────────────────────────────────────────────
+-- CREATE TABLE IF NOT EXISTS order_items (
+--     id           INT AUTO_INCREMENT PRIMARY KEY,
+--     order_id     INT NOT NULL,
+--     menu_item_id INT NOT NULL,
+--     item_name    VARCHAR(150) NOT NULL,
+--     qty          INT NOT NULL DEFAULT 1,
+--     unit_price   DECIMAL(10,2) NOT NULL,
+--     subtotal     DECIMAL(10,2) NOT NULL,
+--     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+--     FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE RESTRICT
+-- );
+
+-- -- ── SEED CATEGORIES ──────────────────────────────────────────────
+-- INSERT IGNORE INTO categories (id, name, icon) VALUES
+-- (1,'All','🍽️'),(2,'Coffee Based','☕'),(3,'Non-Coffee','🧋'),
+-- (4,'Matcha Based','🍵'),(5,'Premium Drinks','✨'),(6,'Silog Meals','🍳'),
+-- (7,'Snacks','🍟'),(8,'Sandwiches','🥪'),(9,'Buldak','🌶️');
+
+-- -- ── SEED MENU ITEMS ──────────────────────────────────────────────
+-- INSERT IGNORE INTO menu_items (id,category_id,name,description,price) VALUES
+-- (1,2,'Americano','Espresso shots topped with cold water.',89),
+-- (2,2,'Spanish Latte','Signature espresso with creamy condensed milk.',89),
+-- (3,2,'Cappuccino','Subtle espresso with fresher milk.',89),
+-- (4,2,'Chocnut Latte','Espresso with milk and chocnut.',89),
+-- (5,2,'White Coffee','Smooth espresso with whole milk.',89),
+-- (6,2,'Mocha','Rich espresso with bittersweet mocha syrup.',89),
+-- (7,2,'Barista Drink','Espresso with sweetened milk and Chocnut drizzle.',89),
+-- (8,3,'Strawberry Milk','Blend of ice and milk with strawberry puree.',89),
+-- (9,3,'Blueberry Fruit Fizz','Blueberry powder with sparkling fizz.',89),
+-- (10,3,'Classic Chocolate','Steamed milk with chocolate syrup.',89),
+-- (11,3,'Strawberry Fruit Fizz','Strawberry powder with sparkling fizz.',89),
+-- (12,3,'Choco Berry','Steamed milk with ice and strawberry puree.',89),
+-- (13,3,'Kiwi Fruit Fizz','Kiwi syrup with sparkling fizz.',89),
+-- (14,3,'Berry Yakult','Milk with ice, yakult, and strawberry puree.',89),
+-- (15,3,'Lychee Fruit Fizz','Lychee syrup with sparkling fizz.',89),
+-- (16,4,'Classic Matcha','Unsweetened matcha with milk and classic syrup.',89),
+-- (17,4,'Berry Matcha','Matcha with steamed milk and strawberry puree.',89),
+-- (18,4,'Dirty Matcha','Espresso with matcha powder, ice and milk.',109),
+-- (19,4,'Blue Matcha','Blueberry tea, ice, matcha shot and steamed milk.',109),
+-- (20,4,'Green Tablea','Earthy matcha meets rich tablea chocolate.',109),
+-- (21,5,'White Mocha','Espresso with white chocolate and steamed milk.',109),
+-- (22,5,'Salted Caramel','Buttery caramel balanced with sea salt.',109),
+-- (23,5,'Biscoff Latte','Latte with Biscoff spice and cookie sweetness.',109),
+-- (24,5,'Hazelnut Latte','Coffee with toffee nut syrup, milk and ice.',109),
+-- (25,5,'Ube Latte','Smooth latte with purple ube.',109),
+-- (26,5,'Caramel Macchiato','Espresso and creamy milk with caramel.',109),
+-- (27,6,'Tapsilog','Tapa, sinangag, itlog.',109),
+-- (28,6,'Bangsilog','Bangus, sinangag, itlog.',109),
+-- (29,6,'Porksilog','Pork, sinangag, itlog.',109),
+-- (30,6,'Tocilog','Tocino, sinangag, itlog.',89),
+-- (31,6,'Hungsilog','Hotdog, sinangag, itlog.',89),
+-- (32,6,'Nuggetssilog','Nuggets, sinangag, itlog.',89),
+-- (33,6,'Spamsilog','Spam, sinangag, itlog.',79),
+-- (34,6,'Hotsilog','Hotsilog meal.',79),
+-- (35,6,'Skinsilog','Chicken skin, sinangag, itlog.',79),
+-- (36,7,'Overload Snack','Overload snack platter.',99),
+-- (37,7,'Overload Burger','Overload burger.',35),
+-- (38,7,'Burger','Classic burger.',25),
+-- (39,7,'Egg','Fried egg.',25),
+-- (40,7,'Big Siomai (1 Order)','Big siomai, 1 order.',120),
+-- (41,7,'Big Siomai (Per Pc)','Big siomai, per piece.',12),
+-- (42,7,'Fries','Crispy fries.',69),
+-- (43,7,'Hash Brown','Golden hash brown.',25),
+-- (44,8,'Tuna Sandwich','Tuna, mayo, tomato, cucumber, lettuce, cheese, fries.',99),
+-- (45,8,'Ham & Egg Sandwich','Egg mayo, ham, lettuce, tomato, cheese, cucumber, fries.',99),
+-- (46,9,'Regular Buldak','Cheesy Buldak Overload. Choose spicy level.',129),
+-- (47,9,'Overload Buldak','Cheesy Buldak Overload — extra loaded!',169);
+
+-- ── IMAGE MIGRATION (run if upgrading existing install) ──────────────────────
+-- ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR(500) DEFAULT NULL;
+-- (image_url column is already in the CREATE TABLE above for fresh installs)

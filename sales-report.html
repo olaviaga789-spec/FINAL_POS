@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){var t=localStorage.getItem("pk_theme")||"light";document.documentElement.setAttribute("data-theme",t);})();</script>
+<style>
+/* SIDEBAR OVERRIDE — must load first, beats everything */
+.sidebar {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  height: 100% !important;
+  width: 220px !important;
+  background: #1A1A1A !important;
+  z-index: 100 !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.sidebar.open { transform: translateX(0) !important; overflow: visible !important; }
+.sidebar:not(.open) .logo-text,
+.sidebar:not(.open) .nav-section-label,
+.sidebar:not(.open) .nav-item span,
+.sidebar:not(.open) .user-info,
+.sidebar:not(.open) #logoutMenu { display: none !important; }
+.sidebar.open .logo-text,
+.sidebar.open .nav-section-label,
+.sidebar.open .nav-item span,
+.sidebar.open .user-info { display: block !important; }
+.sidebar.open .nav-item { justify-content: flex-start !important; padding: 10px 12px !important; }
+.sidebar.open .sidebar-user { justify-content: flex-start !important; }
+.sidebar.open .sidebar-logo { justify-content: flex-start !important; padding: 22px 20px !important; }
+.main-content { width: 100% !important; margin-left: 0 !important; }
+.top-header { padding-left: 66px !important; }
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; backdrop-filter: blur(2px); }
+.sidebar-backdrop.show { display: block; }
+#sidebarToggle, .sidebar-toggle {
+  display: flex !important; visibility: visible !important; opacity: 1 !important;
+  position: fixed !important; top: 14px !important; left: 14px !important;
+  z-index: 999999 !important; width: 42px !important; height: 42px !important;
+  border-radius: 10px !important; background: #1A1A1A !important;
+  border: none !important; cursor: pointer !important;
+  flex-direction: column !important; align-items: center !important;
+  justify-content: center !important; gap: 5px !important;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4) !important; padding: 0 !important;
+}
+#sidebarToggle span, .sidebar-toggle span {
+  display: block !important; width: 20px !important; height: 2px !important;
+  background: #C8A96E !important; border-radius: 2px !important; transition: 0.22s !important;
+}
+#sidebarToggle.open span:nth-child(1), .sidebar-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg) !important; }
+#sidebarToggle.open span:nth-child(2), .sidebar-toggle.open span:nth-child(2) { opacity: 0 !important; }
+#sidebarToggle.open span:nth-child(3), .sidebar-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg) !important; }
+
+  /* ── BEBAS NEUE — applied to headings and big numbers like dashboard ── */
+  .top-header h1 {
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 26px !important;
+    letter-spacing: 2px !important;
+    font-weight: 400 !important;
+  }
+  .strip-value, .stat-value, .card-value {
+    font-family: 'Bebas Neue', sans-serif !important;
+    letter-spacing: 0.5px !important;
+  }
+  .panel-title, .panel-head .panel-title {
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 16px !important;
+    letter-spacing: 1.5px !important;
+    font-weight: 400 !important;
+  }
+  .report-top h2, #rTitle {
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 30px !important;
+    letter-spacing: 2px !important;
+    font-weight: 400 !important;
+  }
+  .order-id {
+    font-family: 'Bebas Neue', sans-serif !important;
+    font-size: 16px !important;
+    letter-spacing: 1px !important;
+  }
+  .stat-number, .orders-count {
+    font-family: 'Bebas Neue', sans-serif !important;
+  }
+</style>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Reports — Padayon Kapetid</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260322">
+  <style>
+/* ── SALES REPORT PAGE STYLES ── */
+.period-tabs{display:flex;gap:6px}
+.period-tab{padding:6px 14px;border-radius:100px;font-size:12px;font-weight:600;background:var(--bg-main);border:1.5px solid var(--border);color:var(--text-mid);cursor:pointer;transition:var(--t);font-family:'DM Sans',sans-serif}
+.period-tab.active{background:var(--primary);border-color:var(--primary);color:#F5F0E8}
+.period-tab:hover:not(.active){border-color:var(--accent);color:var(--primary)}
+.report-content{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+.report-content::-webkit-scrollbar{width:4px}
+.report-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.report-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.report-top h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:800}
+.report-subtitle{font-size:12px;color:var(--text-light);margin-top:3px}
+.top-actions{display:flex;gap:8px;align-items:center}
+.custom-row{display:none;align-items:center;gap:10px;flex-wrap:wrap}
+.custom-row.show{display:flex}
+.date-field{display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;font-size:13px;color:var(--text-mid)}
+.date-field input[type="date"]{border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-dark);cursor:pointer}
+.btn-dark{padding:8px 18px;border-radius:8px;background:var(--primary);color:#F5F0E8;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:.18s}
+.btn-dark:hover{background:var(--accent);color:var(--primary)}
+.btn-outline{padding:8px 18px;border-radius:8px;background:var(--bg-card);border:1.5px solid var(--border);color:var(--text-mid);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.18s}
+.btn-outline:hover{border-color:var(--accent);color:var(--primary)}
+.summary-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+.summary-card{background:var(--bg-card);border:1.5px solid var(--border);border-radius:14px;padding:18px;transition:.18s}
+.summary-card:hover{box-shadow:0 4px 20px rgba(26,20,10,.1);border-color:var(--accent)}
+.summary-card.hl{border-color:var(--accent);background:linear-gradient(135deg,#2D1A08,#1A1A1A);color:#F5F0E8}
+.card-icon{font-size:22px;margin-bottom:8px}
+.card-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-light);margin-bottom:4px}
+.summary-card.hl .card-label{color:rgba(200,169,110,.7)}
+.card-value{font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:var(--accent)}
+.card-sub{font-size:11px;color:var(--text-light);margin-top:3px}
+.summary-card.hl .card-sub{color:rgba(255,255,255,.35)}
+.report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+.panel{background:var(--bg-card);border:1.5px solid var(--border);border-radius:14px;overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.panel-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700}
+.panel-badge{padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700}
+.panel-badge.live{background:#D1FAE5;color:#065F46}
+.bar-chart{padding:16px 18px;min-height:180px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-label{font-size:11px;color:var(--text-light);width:32px;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:12px;background:var(--bg-main);border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-light));border-radius:6px;transition:.5s}
+.bar-val{font-size:11px;font-weight:600;color:var(--text-mid);width:60px;text-align:right;flex-shrink:0}
+.top-items{padding:0}
+.top-item{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--border)}
+.top-item:last-child{border-bottom:none}
+.item-rank{width:22px;height:22px;border-radius:50%;background:var(--bg-main);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text-light);flex-shrink:0}
+.item-rank.gold{background:#F8E060;color:#5A4000}
+.item-rank.silver{background:#E0E0E0;color:#444}
+.item-rank.bronze{background:#F0C090;color:#5A2800}
+.item-name{flex:1;font-size:13px;font-weight:500}
+.item-cat{font-size:10px;color:var(--text-light)}
+.item-qty{font-size:12px;color:var(--text-light);width:50px;text-align:center}
+.item-rev{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:var(--accent)}
+.cat-list{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.cat-item{display:flex;align-items:center;gap:10px}
+.cat-icon{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.cat-name{flex:1;font-size:13px;font-weight:500}
+.cat-track{width:90px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0}
+.cat-fill{height:100%;background:var(--accent);border-radius:3px}
+.cat-amt{font-size:12px;font-weight:600;color:var(--text-mid);width:55px;text-align:right;flex-shrink:0}
+.orders-table-wrap{overflow-x:auto}
+.orders-table{width:100%;border-collapse:collapse}
+.orders-table th{padding:10px 16px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-light);background:var(--bg-main);border-bottom:1px solid var(--border)}
+.orders-table td{padding:11px 16px;font-size:13px;border-bottom:1px solid var(--border)}
+.orders-table tr:last-child td{border-bottom:none}
+.orders-table tr:hover td{background:var(--bg-main)}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:600}
+.badge-completed{background:#D1FAE5;color:#065F46}
+.badge-pending{background:#FEF3C7;color:#92400E}
+.badge-cancelled{background:#FEE2E2;color:#991B1B}
+.loading-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:4px;display:none}
+.loading-bar.show{display:block}
+.loading-bar::after{content:'';display:block;height:100%;width:40%;background:var(--accent);border-radius:2px;animation:lbar 1s infinite}
+@keyframes lbar{from{transform:translateX(-250%)}to{transform:translateX(400%)}}
+.db-notice{background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:10px 16px;font-size:12px;color:#92400E;display:flex;align-items:center;gap:8px}
+.db-notice.ok{background:#D1FAE5;border-color:#A7F3D0;color:#065F46}
+.empty{padding:36px 20px;text-align:center;color:var(--text-light)}
+.empty-icon{font-size:34px;margin-bottom:8px}
+.empty p{font-size:13px}
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:12px 18px;border-radius:12px;background:var(--primary);color:#F5F0E8;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(26,20,10,.2);animation:tin .25s ease,tout .25s ease 2.75s forwards;max-width:300px}
+.toast.success{background:#2D6A4F}.toast.error{background:#DC2626}
+@keyframes tin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tout{from{opacity:1}to{opacity:0;transform:translateX(20px)}}
+
+/* ── SALES REPORT RESPONSIVE ─────────────────────────────── */
+@media (max-width: 768px) {
+  .top-header { padding-left: 62px !important; flex-wrap: wrap; height: auto !important; padding-top: 12px; padding-bottom: 12px; gap: 10px; }
+  .period-tabs { flex-wrap: wrap; gap: 4px; }
+  .period-tab { padding: 5px 10px; font-size: 11px; }
+  .report-content { padding: 14px; gap: 14px; }
+  .summary-cards { grid-template-columns: repeat(2,1fr); gap: 8px; }
+  .card-value { font-size: 18px; }
+  .card-icon { font-size: 18px; margin-bottom: 4px; }
+  .report-grid { grid-template-columns: 1fr; gap: 12px; }
+  .report-top { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .top-actions { flex-wrap: wrap; gap: 6px; }
+  .btn-outline, .btn-dark { padding: 7px 12px; font-size: 11px; }
+  .custom-row { gap: 6px; }
+  .bar-chart { padding: 12px 14px; }
+}
+@media (max-width: 480px) {
+  .summary-cards { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .summary-card { padding: 12px; }
+  .card-value { font-size: 16px; }
+  .top-header h1 { font-size: 16px; }
+  .report-content { padding: 10px; gap: 10px; }
+}
+  </style></head>
+<body>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="toast-container" id="toastContainer"></div>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar"></aside>
+  <script src="js/auth-check.js"></script>
+  <script>
+    const _srUser = requireLogin(['admin']);
+    if (_srUser) buildNav('sales-report', _srUser);
+  </script>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="top-header">
+      <h1>Sales Reports</h1>
+      <div class="header-spacer"></div>
+      <div class="period-tabs">
+        <button class="period-tab active" onclick="setPeriod('today',this)">Today</button>
+        <button class="period-tab" onclick="setPeriod('week',this)">This Week</button>
+        <button class="period-tab" onclick="setPeriod('month',this)">This Month</button>
+        <button class="period-tab" onclick="setPeriod('custom',this)">Custom</button>
+      </div>
+    </header>
+
+    <main class="report-content">
+
+      <!-- DB status notice -->
+      <div id="dbNotice" class="db-notice">⏳ Connecting to database...</div>
+
+      <!-- Loading bar -->
+      <div class="loading-bar" id="loadingBar"></div>
+
+      <!-- Custom date -->
+      <div class="custom-row" id="customRow">
+        <div class="date-field"><span>From</span><input type="date" id="dateFrom"></div>
+        <div class="date-field"><span>To</span><input type="date" id="dateTo"></div>
+        <button class="btn-dark" onclick="loadAll()">Apply</button>
+      </div>
+
+      <!-- Header -->
+      <div class="report-top">
+        <div>
+          <h2 id="rTitle">Today's Sales</h2>
+          <div class="report-subtitle" id="rSub"></div>
+        </div>
+        <div class="top-actions">
+          <button class="btn-outline" onclick="loadAll()">↺ Refresh</button>
+          <button class="btn-outline" onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="btn-outline" onclick="printReport()">🖨 Print Report</button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-cards">
+        <div class="summary-card hl">
+          <div class="card-icon">💰</div>
+          <div class="card-label">Total Sales</div>
+          <div class="card-value" id="cRevenue">—</div>
+          <div class="card-sub" id="cRevSub">Loading...</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon">🧾</div>
+          <div class="card-label">Total Orders</div>
+          <div class="card-value" id="cOrders">—</div>
+          <div class="card-sub">Transactions</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon">🛒</div>
+          <div class="card-label">Avg. Order Value</div>
+          <div class="card-value" id="cAvg">—</div>
+          <div class="card-sub">Per transaction</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon">📦</div>
+          <div class="card-label">Items Sold</div>
+          <div class="card-value" id="cItems">—</div>
+          <div class="card-sub">Total quantity</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-icon">🏛️</div>
+          <div class="card-label">VAT Collected</div>
+          <div class="card-value" id="cVat">—</div>
+          <div class="card-sub">12% VAT</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="report-grid">
+
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title" id="barTitle">Sales by Hour</span>
+            <span class="panel-badge live" id="barBadge">Live</span>
+          </div>
+          <div class="bar-chart" id="barChart">
+            <div class="empty"><div class="empty-icon">📊</div><p>Loading...</p></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Sales by Category</span>
+            <span class="panel-badge live">Live</span>
+          </div>
+          <div class="cat-chart" id="catChart">
+            <div class="empty"><div class="empty-icon">🍽️</div><p>Loading...</p></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Top Selling Items</span>
+            <span class="panel-badge live">Live · Top 8</span>
+          </div>
+          <div id="topItems">
+            <div class="empty"><div class="empty-icon">🏆</div><p>Loading...</p></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Recent Orders</span>
+            <span class="panel-badge live" id="ordersBadge">Live</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="sales-table">
+              <thead><tr>
+                <th>Order #</th><th>Customer</th><th>Type</th>
+                <th>Items</th><th>Total</th><th>Status</th><th>Time</th>
+              </tr></thead>
+              <tbody id="ordersBody">
+                <tr><td colspan="7" style="text-align:center;padding:28px;color:var(--text-light)">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const API = './php/report.php';
+const IS_LOCAL = location.protocol === 'file:';
+let period = 'today';
+let isLive  = false;
+let exportData = [];
+
+/* ── DEMO FALLBACK ── */
+const DEMO_ORDERS = [
+  {id:1001,customer_name:'Maria Santos',  order_type:'dine-in', item_count:3,subtotal:267,  tax:32.04,total:299.04,status:'completed',created_at:ts(8,15)},
+  {id:1002,customer_name:'Juan dela Cruz',order_type:'takeout', item_count:2,subtotal:178,  tax:21.36,total:199.36,status:'completed',created_at:ts(9,2)},
+  {id:1003,customer_name:'Ana Reyes',     order_type:'dine-in', item_count:4,subtotal:356,  tax:42.72,total:398.72,status:'completed',created_at:ts(9,45)},
+  {id:1004,customer_name:'Carlo Mendoza', order_type:'delivery',item_count:1,subtotal:109,  tax:13.08,total:122.08,status:'completed',created_at:ts(10,30)},
+  {id:1005,customer_name:'Liza Bautista', order_type:'dine-in', item_count:5,subtotal:445,  tax:53.40,total:498.40,status:'completed',created_at:ts(11,10)},
+  {id:1006,customer_name:'Guest',         order_type:'takeout', item_count:2,subtotal:198,  tax:23.76,total:221.76,status:'pending',  created_at:ts(11,55)},
+  {id:1007,customer_name:'Rico Dalisay',  order_type:'dine-in', item_count:3,subtotal:267,  tax:32.04,total:299.04,status:'completed',created_at:ts(12,20)},
+  {id:1008,customer_name:'Nena Torres',   order_type:'dine-in', item_count:2,subtotal:178,  tax:21.36,total:199.36,status:'completed',created_at:ts(13,5)},
+  {id:1009,customer_name:'Guest',         order_type:'takeout', item_count:1,subtotal:89,   tax:10.68,total:99.68, status:'cancelled',created_at:ts(13,40)},
+  {id:1010,customer_name:'Dante Cruz',    order_type:'dine-in', item_count:4,subtotal:376,  tax:45.12,total:421.12,status:'completed',created_at:ts(14,15)},
+];
+const DEMO_TOP = [
+  {name:'Spanish Latte',    category:'Coffee Based',   icon:'☕',qty:24,revenue:2136},
+  {name:'Tapsilog',         category:'Silog Meals',    icon:'🍳',qty:18,revenue:1962},
+  {name:'Caramel Macchiato',category:'Premium Drinks', icon:'✨',qty:15,revenue:1635},
+  {name:'Biscoff Latte',    category:'Premium Drinks', icon:'✨',qty:14,revenue:1526},
+  {name:'Classic Matcha',   category:'Matcha Based',   icon:'🍵',qty:13,revenue:1157},
+  {name:'Americano',        category:'Coffee Based',   icon:'☕',qty:11,revenue:979},
+  {name:'Overload Snack',   category:'Snacks',         icon:'🍟',qty:10,revenue:990},
+  {name:'Tuna Sandwich',    category:'Sandwiches',     icon:'🥪',qty:9, revenue:891},
+];
+const DEMO_CATS = [
+  {icon:'☕',name:'Coffee Based',   revenue:3115},
+  {icon:'✨',name:'Premium Drinks', revenue:3161},
+  {icon:'🍳',name:'Silog Meals',    revenue:2890},
+  {icon:'🍵',name:'Matcha Based',   revenue:1157},
+  {icon:'🍟',name:'Snacks',         revenue:990},
+  {icon:'🥪',name:'Sandwiches',     revenue:891},
+  {icon:'🧋',name:'Non-Coffee',     revenue:712},
+  {icon:'🌶️',name:'Buldak',        revenue:169},
+];
+const DEMO_HOURLY = [
+  {hour:7,revenue:0},{hour:8,revenue:299},{hour:9,revenue:598},
+  {hour:10,revenue:122},{hour:11,revenue:720},{hour:12,revenue:221},
+  {hour:13,revenue:499},{hour:14,revenue:421},
+];
+
+function ts(h,m){ const d=new Date(); d.setHours(h,m,0,0); return d.toISOString(); }
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  // Auth guard — must be inside DOMContentLoaded so #sidebar exists
+
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('dateFrom').value = today;
+  document.getElementById('dateTo').value   = today;
+  document.getElementById('rSub').textContent = 'As of '+new Date().toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  loadAll();
+});
+
+function go(url){ location.href = url; }
+
+function setPeriod(p, btn){
+  period = p;
+  document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('customRow').classList.toggle('show', p==='custom');
+  const titles={today:"Today's Sales",week:"This Week's Sales",month:"This Month's Sales",custom:"Custom Period"};
+  document.getElementById('rTitle').textContent = titles[p];
+  loadAll();
+}
+
+/* ── PARAMS ── */
+function params(){
+  let p = '?period='+period;
+  if(period==='custom'){
+    p += '&from='+document.getElementById('dateFrom').value;
+    p += '&to='  +document.getElementById('dateTo').value;
+  }
+  return p;
+}
+
+/* ── LOAD ALL ── */
+async function loadAll(){
+  if(IS_LOCAL){ renderDemo(); setNotice(false); return; }
+  startLoad();
+  try {
+    const [summary, topItems, cats, barData, orders] = await Promise.all([
+      api('summary'), api('top_items'), api('by_category'),
+      period==='today' ? api('by_hour') : api('by_day'),
+      api('orders')
+    ]);
+    isLive = true;
+    setNotice(true);
+    renderSummary(summary);
+    renderTop(topItems);
+    renderCats(cats);
+    renderBars(barData, period==='today');
+    renderOrders(orders);
+    exportData = orders;
+  } catch(e){
+    setNotice(false, '⚠ Cannot reach database. Showing demo data. Open via http://localhost/pos/ to see live data.');
+    renderDemo();
+  }
+  stopLoad();
+}
+
+async function api(action){
+  const res = await fetch(API+params()+'&action='+action);
+  if(!res.ok) throw new Error('API error');
+  return res.json();
+}
+
+function startLoad(){
+  document.getElementById('loadingBar').classList.add('show');
+}
+function stopLoad(){
+  document.getElementById('loadingBar').classList.remove('show');
+}
+
+function setNotice(live, msg=''){
+  const el = document.getElementById('dbNotice');
+  if(live){
+    el.className='db-notice ok';
+    el.textContent='✅ Connected to MySQL — showing live data from your database.';
+  } else {
+    el.className='db-notice';
+    el.textContent = msg || '⚠ Demo mode — open via http://localhost/pos/ for live MySQL data.';
+  }
+}
+
+/* ── RENDER SUMMARY ── */
+function renderSummary(d){
+  document.getElementById('cRevenue').textContent = '₱'+fmt(d.total_subtotal);
+  document.getElementById('cOrders').textContent  = d.total_orders;
+  document.getElementById('cAvg').textContent     = '₱'+fmt(d.avg_order);
+  document.getElementById('cItems').textContent   = d.items_sold;
+  document.getElementById('cVat').textContent     = '₱'+fmt(d.total_tax);
+  // Sub label: show how many orders contributed to revenue
+  document.getElementById('cRevSub').textContent  = d.total_orders+' order'+(d.total_orders!=1?'s':'')+' (excl. cancelled)';
+}
+
+/* ── RENDER BAR CHART ── */
+function renderBars(data, isHour){
+  const el = document.getElementById('barChart');
+  document.getElementById('barTitle').textContent = isHour ? 'Sales by Hour' : 'Sales by Day';
+  document.getElementById('barBadge').textContent = isHour ? 'Today · Live' : period==='week'?'This Week · Live':'This Month · Live';
+
+  if(!data.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><p>No sales yet for this period</p></div>';
+    return;
+  }
+  const max = Math.max(...data.map(d=>+d.revenue),1);
+  el.innerHTML = data.map(d=>{
+    const label = isHour
+      ? (d.hour<12 ? d.hour+'am' : d.hour===12 ? '12pm' : (d.hour-12)+'pm')
+      : (d.day_name||d.day||'').slice(0,3);
+    const val = +d.revenue;
+    return `<div class="bar-row">
+      <span class="bar-label">${label}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${val/max*100}%"></div></div>
+      <span class="bar-value">₱${fmt(val)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ── RENDER TOP ITEMS ── */
+function renderTop(items){
+  const el = document.getElementById('topItems');
+  if(!items.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">🏆</div><p>No items sold yet</p></div>';
+    return;
+  }
+  const ICONS = {'Coffee Based':'☕','Non-Coffee':'🧋','Matcha Based':'🍵','Premium Drinks':'✨','Silog Meals':'🍳','Snacks':'🍟','Sandwiches':'🥪','Buldak':'🌶️'};
+  el.innerHTML = items.map((it,i)=>`
+    <div class="top-item">
+      <div class="rank">${i+1}</div>
+      <div class="item-emoji">${it.icon||ICONS[it.category]||'🍽️'}</div>
+      <div class="item-info">
+        <div class="item-name">${it.name||it.item_name}</div>
+        <div class="item-cat">${it.category||'—'}</div>
+      </div>
+      <div class="item-stats">
+        <div class="item-rev">₱${fmt(it.revenue)}</div>
+        <div class="item-qty">${it.qty} sold</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ── RENDER CATEGORIES ── */
+function renderCats(cats){
+  const el = document.getElementById('catChart');
+  if(!cats.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">🍽️</div><p>No sales yet</p></div>';
+    return;
+  }
+  const ICONS = {'Coffee Based':'☕','Non-Coffee':'🧋','Matcha Based':'🍵','Premium Drinks':'✨','Silog Meals':'🍳','Snacks':'🍟','Sandwiches':'🥪','Buldak':'🌶️'};
+  const max = Math.max(...cats.map(c=>+c.revenue),1);
+  el.innerHTML = cats.map(c=>`
+    <div class="cat-row">
+      <span class="cat-em">${c.icon||ICONS[c.category||c.name]||'🍽️'}</span>
+      <span class="cat-name">${c.category||c.name}</span>
+      <div class="cat-track"><div class="cat-fill" style="width:${+c.revenue/max*100}%"></div></div>
+      <span class="cat-amt">₱${fmt(c.revenue)}</span>
+    </div>`).join('');
+}
+
+/* ── RENDER ORDERS TABLE ── */
+function renderOrders(orders){
+  document.getElementById('ordersBadge').textContent = 'Live · '+orders.length+' orders';
+  const tbody = document.getElementById('ordersBody');
+  if(!orders.length){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--text-light)">No orders for this period</td></tr>';
+    return;
+  }
+  tbody.innerHTML = orders.map(o=>{
+    const t   = new Date(o.created_at).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+    const icon= o.order_type==='dine-in'?'🍽️':o.order_type==='takeout'?'🥡':'🛵';
+    const cls = o.status==='completed'?'badge-done':o.status==='pending'?'badge-pend':'badge-canc';
+    return `<tr>
+      <td><span class="order-id">#${o.id}</span></td>
+      <td>${o.customer_name||'Guest'}</td>
+      <td>${icon} ${o.order_type}</td>
+      <td>${o.item_count}</td>
+      <td><span class="amt">₱${fmt(o.total)}</span></td>
+      <td><span class="badge ${cls}">${o.status}</span></td>
+      <td style="color:var(--text-light)">${t}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── DEMO RENDER ── */
+function renderDemo(){
+  const mul = period==='week'?7:period==='month'?30:1;
+  const orders = DEMO_ORDERS;
+  const total  = orders.reduce((s,o)=>s+o.subtotal,0)*mul;
+  const tax    = orders.reduce((s,o)=>s+o.tax,0)*mul;
+  const items  = orders.reduce((s,o)=>s+o.item_count,0)*mul;
+  const cnt    = orders.length*mul;
+  document.getElementById('cRevenue').textContent = '₱'+fmt(total);
+  document.getElementById('cOrders').textContent  = cnt;
+  document.getElementById('cAvg').textContent     = '₱'+fmt(total/cnt);
+  document.getElementById('cItems').textContent   = items;
+  document.getElementById('cVat').textContent     = '₱'+fmt(tax);
+  document.getElementById('cRevSub').textContent  = cnt+' orders (demo)';
+  const bars = period==='today' ? DEMO_HOURLY :
+    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].slice(0,period==='week'?7:new Date().getDate()>7?7:new Date().getDate())
+    .map((day_name,i)=>({day_name,revenue:Math.round(800+Math.random()*1400)}));
+  renderBars(bars, period==='today');
+  renderTop(DEMO_TOP);
+  renderCats(DEMO_CATS.map(c=>({...c,category:c.name})));
+  renderOrders(DEMO_ORDERS);
+  exportData = DEMO_ORDERS;
+  document.getElementById('ordersBadge').textContent = 'Demo · 10 orders';
+}
+
+/* ── PRINT REPORT ── */
+function printReport(){
+  const title   = document.getElementById('rTitle')?.innerText  || 'Sales Report';
+  const subtitle= document.getElementById('rSub')?.innerText    || '';
+  const revenue = document.getElementById('cRevenue')?.innerText || '—';
+  const orders  = document.getElementById('cOrders')?.innerText  || '—';
+  const items   = document.getElementById('cItems')?.innerText   || '—';
+  const avg     = document.getElementById('cAvg')?.innerText     || '—';
+  const cancelled = document.getElementById('cCancelled')?.innerText || '—';
+
+  // Build orders table rows
+  let tableRows = '';
+  exportData.forEach(o => {
+    const statusClass = o.status === 'completed' ? 'color:#065F46;background:#D1FAE5'
+                      : o.status === 'cancelled'  ? 'color:#991B1B;background:#FEE2E2'
+                      : 'color:#92400E;background:#FEF3C7';
+    tableRows += `<tr>
+      <td>#${o.id}</td>
+      <td>${o.customer_name || 'Guest'}</td>
+      <td style="text-transform:capitalize">${o.order_type || ''}</td>
+      <td style="text-align:center">${o.item_count || 0}</td>
+      <td style="text-align:right">₱${fmt(o.subtotal)}</td>
+      <td style="text-align:right">₱${fmt(o.tax)}</td>
+      <td style="text-align:right;font-weight:700">₱${fmt(o.total)}</td>
+      <td><span style="padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;${statusClass}">${o.status}</span></td>
+      <td>${new Date(o.created_at).toLocaleString('en-PH')}</td>
+    </tr>`;
+  });
+
+  const printWin = window.open('', '_blank', 'width=1050,height=750');
+  printWin.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <title>Sales Report — Padayon Kapetid</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:'DM Sans',Arial,sans-serif;font-size:13px;color:#1A1008;background:#fff;padding:32px 40px}
+      .print-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #2D1A08}
+      .brand{font-size:20px;font-weight:800;color:#2D1A08;letter-spacing:0.5px}
+      .brand span{display:block;font-size:11px;font-weight:400;color:#8B7355;margin-top:2px;letter-spacing:0}
+      .report-meta{text-align:right}
+      .report-meta h2{font-size:18px;font-weight:800;color:#2D1A08}
+      .report-meta p{font-size:11px;color:#8B7355;margin-top:3px}
+      .print-date{font-size:10px;color:#8B7355;margin-top:4px}
+      .summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+      .summary-box{border:1.5px solid #E8DDD0;border-radius:10px;padding:12px 14px}
+      .summary-box.hl{background:#2D1A08;color:#F5F0E8;border-color:#2D1A08}
+      .s-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#8B7355;margin-bottom:4px}
+      .summary-box.hl .s-label{color:rgba(200,169,110,.7)}
+      .s-value{font-size:20px;font-weight:800;color:#C8A96E}
+      .summary-box.hl .s-value{color:#C8A96E}
+      table{width:100%;border-collapse:collapse;font-size:12px}
+      thead th{background:#2D1A08;color:#F5F0E8;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px}
+      tbody td{padding:9px 12px;border-bottom:1px solid #F0E8DC}
+      tbody tr:nth-child(even) td{background:#FAFAF8}
+      tbody tr:last-child td{border-bottom:none}
+      .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#8B7355;margin-bottom:10px}
+      .print-footer{margin-top:28px;padding-top:14px;border-top:1px solid #E8DDD0;display:flex;justify-content:space-between;font-size:10px;color:#8B7355}
+      @media print{body{padding:20px 24px}button{display:none}}
+    </style>
+  </head><body>
+    <div class="print-header">
+      <div>
+        <div class="brand">☕ Padayon Kapetid<span>Point of Sale System</span></div>
+      </div>
+      <div class="report-meta">
+        <h2>${title}</h2>
+        <p>${subtitle}</p>
+        <p class="print-date">Printed: ${new Date().toLocaleString('en-PH')}</p>
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-box hl">
+        <div class="s-label">💰 Total Sales</div>
+        <div class="s-value">₱${revenue.replace('₱','')}</div>
+      </div>
+      <div class="summary-box">
+        <div class="s-label">📋 Total Orders</div>
+        <div class="s-value" style="color:#2D1A08">${orders}</div>
+      </div>
+      <div class="summary-box">
+        <div class="s-label">🛍 Items Sold</div>
+        <div class="s-value" style="color:#2D1A08">${items}</div>
+      </div>
+      <div class="summary-box">
+        <div class="s-label">📊 Avg Order</div>
+        <div class="s-value" style="color:#2D1A08">₱${avg.replace('₱','')}</div>
+      </div>
+      <div class="summary-box">
+        <div class="s-label">❌ Cancelled</div>
+        <div class="s-value" style="color:#991B1B">${cancelled}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Order Records</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Order #</th><th>Customer</th><th>Type</th><th style="text-align:center">Items</th>
+          <th style="text-align:right">Subtotal</th><th style="text-align:right">VAT</th>
+          <th style="text-align:right">Total</th><th>Status</th><th>Date & Time</th>
+        </tr>
+      </thead>
+      <tbody>${tableRows || '<tr><td colspan="9" style="text-align:center;padding:24px;color:#8B7355">No records for this period</td></tr>'}</tbody>
+    </table>
+
+    <div class="print-footer">
+      <span>Padayon Kapetid POS — Confidential</span>
+      <span>Generated by POS System · ${new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'})}</span>
+    </div>
+    <script>window.onload=()=>{window.print()}<\/script>
+  </body></html>`);
+  printWin.document.close();
+}
+
+/* ── EXPORT CSV ── */
+function exportCSV(){
+  const rows=[['Order #','Customer','Type','Items','Subtotal','VAT','Total','Status','Date & Time']];
+  exportData.forEach(o=>rows.push([
+    '#'+o.id, o.customer_name||'Guest', o.order_type,
+    o.item_count, o.subtotal, o.tax, o.total, o.status,
+    new Date(o.created_at).toLocaleString('en-PH')
+  ]));
+  const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='padayon_kapetid_'+period+'_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+}
+
+function fmt(n){ return parseFloat(n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+</script>
+</body>
+</html>

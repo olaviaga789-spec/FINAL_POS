@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){var t=localStorage.getItem("pk_theme")||"light";document.documentElement.setAttribute("data-theme",t);})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics — Padayon Kapetid POS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       DASHBOARD — COMPLETE SELF-CONTAINED STYLES
+       (hardcoded values so style.css conflicts don't matter)
+       ═══════════════════════════════════════════════════════════════ */
+
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg-main:#F5F0E8; --bg-card:#FDFAF4; --border:#E8DFD0; --text-dark:#1A1A1A; --text-mid:#5C5346; --text-light:#9C8E7E; --accent:#C8A96E; --primary:#1A1A1A; }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg-main); color: var(--text-dark); font-size: 14px; line-height: 1.5; }
+    body { overflow: hidden; } /* Keep scroll lock on body but NOT html */
+    button { cursor: pointer; border: none; outline: none; font-family: inherit; }
+    input, select { font-family: inherit; outline: none; border: none; }
+
+    /* ── LAYOUT ── */
+    .app-shell { display: flex; height: 100vh; overflow: hidden; }
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-main); min-width: 0; }
+
+    /* ── TOP HEADER ── */
+    .top-header { height: 64px; flex-shrink: 0; background: var(--bg-card); border-bottom: 1.5px solid var(--border); display: flex; align-items: center; padding: 0 28px 0 74px; gap: 16px; }
+    .top-header h1 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #1A1A1A; }
+    .header-spacer { flex: 1; }
+
+    /* ── SIDEBAR: always a fixed drawer, hidden off-screen by default ── */
+    .sidebar {
+      width: 220px;
+      background: #1A1A1A;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100%;
+      z-index: 100;
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+      overflow: hidden;
+    }
+    .sidebar.open { transform: translateX(0); overflow: visible; }
+    .sidebar:not(.open) .sidebar-logo .logo-text,
+    .sidebar:not(.open) .nav-section-label,
+    .sidebar:not(.open) .nav-item span,
+    .sidebar:not(.open) .user-info,
+    .sidebar:not(.open) #logoutMenu { display: none !important; }
+    .sidebar.open .sidebar-logo .logo-text,
+    .sidebar.open .nav-section-label,
+    .sidebar.open .nav-item span,
+    .sidebar.open .user-info { display: block !important; }
+    .sidebar.open .nav-item { justify-content: flex-start; padding: 10px 12px; }
+    .sidebar.open .sidebar-user { justify-content: flex-start; }
+    .sidebar.open .sidebar-logo { justify-content: flex-start; padding: 22px 20px; }
+
+    .header-date { display: flex; flex-direction: column; }
+    .header-date-day { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; color: var(--text-dark); line-height: 1; }
+    .header-date-sub { font-size: 11px; color: var(--text-light); font-weight: 500; }
+    .header-divider { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
+    .period-tabs { display: flex; gap: 4px; background: var(--bg-main); border: 1.5px solid var(--border); border-radius: 10px; padding: 3px; }
+    .period-tab { padding: 5px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; color: var(--text-light); background: transparent; transition: 0.16s; cursor: pointer; border: none; }
+    .period-tab.active { background: #1A1A1A; color: #C8A96E; }
+    .period-tab:hover:not(.active) { color: var(--text-dark); }
+    .refresh-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--bg-main); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text-mid); cursor: pointer; transition: 0.16s; }
+    .refresh-btn:hover { border-color: #C8A96E; color: #C8A96E; }
+
+    /* ── HAMBURGER: always visible at ALL screen sizes ── */
+    .sidebar-toggle {
+      display: flex !important;
+      position: fixed;
+      top: 14px; left: 14px;
+      z-index: 99999;
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: #1A1A1A;
+      border: none;
+      cursor: pointer;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sidebar-toggle span { display: block; width: 18px; height: 2px; background: #C8A96E; border-radius: 2px; transition: 0.22s; }
+    .sidebar-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .sidebar-toggle.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .sidebar-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ── SIDEBAR BACKDROP ── */
+    .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; backdrop-filter: blur(2px); }
+    .sidebar-backdrop.show { display: block; }
+
+    /* ── DASHBOARD SCROLL BODY ── */
+    .dash-body { flex: 1; overflow-y: auto; padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+    .dash-body::-webkit-scrollbar { width: 5px; }
+    .dash-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── KPI CARDS ── */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .kpi-card { background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden; transition: 0.2s; }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,20,10,0.10); }
+    .kpi-card.accent-card { background: #1A1A1A; border-color: #1A1A1A; }
+    .kpi-card::after { content: ''; position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; background: rgba(200,169,110,0.07); }
+    .kpi-card.accent-card::after { background: rgba(200,169,110,0.12); }
+    .kpi-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
+    .kpi-card.accent-card .kpi-label { color: rgba(200,169,110,0.6); }
+    .kpi-value { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 0.5px; color: var(--text-dark); line-height: 1; }
+    .kpi-card.accent-card .kpi-value { color: #C8A96E; }
+    .kpi-footer { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 500; color: var(--text-light); }
+    .kpi-card.accent-card .kpi-footer { color: rgba(255,255,255,0.4); }
+    .kpi-badge { padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .kpi-badge.up { background: rgba(76,175,125,0.15); color: #4CAF7D; }
+    .kpi-badge.neutral { background: rgba(200,169,110,0.15); color: #C8A96E; }
+    .kpi-icon { position: absolute; top: 16px; right: 20px; font-size: 22px; opacity: 0.4; }
+
+    /* ── SECTION TITLES ── */
+    .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--text-dark); line-height: 1; }
+    .section-subtitle { font-size: 12px; color: var(--text-light); font-weight: 500; margin-top: 2px; }
+
+    /* ── GRID ROWS ── */
+    .middle-row { display: grid; grid-template-columns: 1fr 260px; gap: 12px; align-items: stretch; }
+    .bottom-row  { display: grid; grid-template-columns: 1fr 260px; gap: 12px; align-items: stretch; }
+    .side-panel  { display: flex; flex-direction: column; gap: 14px; height: 100%; }
+
+    /* ── CHART CARD ── */
+    .chart-card { background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 18px; padding: 20px 22px; height: 100%; box-sizing: border-box; }
+    .chart-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+    .chart-wrap { position: relative; width: 100%; height: 210px; }
+    .chart-legend { display: flex; gap: 16px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-mid); font-weight: 500; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ── FEATURE CARD (Revenue) ── */
+    .feature-card { background: #1A1A1A; border-radius: 18px; padding: 20px 18px; position: relative; overflow: hidden; flex: 1; min-height: 160px; }
+    .feature-card::before { content: ''; position: absolute; bottom: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(200,169,110,0.1); }
+    .feature-card::after  { content: ''; position: absolute; top: -20px; left: -20px; width: 80px; height: 80px; border-radius: 50%; background: rgba(200,169,110,0.06); }
+    .feature-tag { display: inline-block; background: rgba(200,169,110,0.15); color: #C8A96E; border: 1px solid rgba(200,169,110,0.3); border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 10px; margin-bottom: 12px; }
+    .feature-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: #fff; line-height: 1.1; position: relative; z-index: 1; }
+    .feature-title span { color: #C8A96E; }
+    .feature-meta { margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.4); position: relative; z-index: 1; }
+    .feature-value { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #C8A96E; letter-spacing: 1px; }
+
+    /* ── BEST SELLER CARD ── */
+    .best-seller-card { background: #1A1A1A; border-radius: 20px; padding: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; flex: 1; min-height: 280px; }
+    .bs-card-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; transition: transform 0.5s ease; z-index: 0; }
+    .best-seller-card:hover .bs-card-bg { transform: scale(1.03); }
+    .bs-card-bg-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 64px; z-index: 0; background: rgba(255,255,255,0.03); }
+    .bs-card-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,6,2,0.72) 0%, rgba(10,6,2,0.18) 38%, rgba(10,6,2,0.18) 55%, rgba(10,6,2,0.88) 100%); z-index: 1; }
+    .bs-header { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 14px 14px 0; }
+    .bs-period-label { font-size: 10px; color: rgba(200,169,110,0.7); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-top: 2px; }
+    .bs-middle-spacer { flex: 1; z-index: 2; position: relative; }
+    .bs-bottom { position: relative; z-index: 2; padding: 0 10px 12px; display: flex; flex-direction: column; gap: 0; }
+    .bs-hero { position: relative; z-index: 2; padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; }
+    .bs-hero-badge { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg,#FFD700,#C8A030); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue',sans-serif; font-size: 13px; color: #3a2800; box-shadow: 0 2px 10px rgba(200,160,48,0.55); margin-bottom: 3px; }
+    .bs-hero-name { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1.5px; color: #fff; line-height: 1.1; text-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+    .bs-hero-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .bs-hero-cat { font-size: 9.5px; color: rgba(200,169,110,0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+    .bs-hero-qty { background: rgba(200,169,110,0.2); border: 1px solid rgba(200,169,110,0.45); border-radius: 5px; padding: 1px 8px; font-family: 'Bebas Neue',sans-serif; font-size: 12px; color: #C8A96E; letter-spacing: 1px; }
+    .bs-runners { display: flex; flex-direction: column; gap: 5px; }
+    .bs-runner-row { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); transition: background 0.16s; }
+    .bs-runner-row:hover { background: rgba(255,255,255,0.07); }
+    .bs-runner-img { width: 30px; height: 30px; border-radius: 8px; object-fit: cover; flex-shrink: 0; display: block; }
+    .bs-runner-placeholder { width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .bs-runner-badge { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue',sans-serif; font-size: 10px; flex-shrink: 0; }
+    .bs-runner-badge.rank-2 { background: linear-gradient(135deg,#C0C0C0,#A8A8A8); color:#3a3a3a; }
+    .bs-runner-badge.rank-3 { background: linear-gradient(135deg,#CD7F32,#A0622A); color:#fff; }
+    .bs-runner-badge.rank-other { background: rgba(255,255,255,0.1); color:rgba(255,255,255,0.5); }
+    .bs-runner-info { flex: 1; min-width: 0; }
+    .bs-runner-name { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bs-runner-cat { font-size: 9.5px; color: rgba(255,255,255,0.3); margin-top: 1px; }
+    .bs-runner-qty { font-family: 'Bebas Neue',sans-serif; font-size: 14px; color: #C8A96E; letter-spacing: 0.5px; flex-shrink: 0; }
+
+    /* ── CATEGORY BREAKDOWN ── */
+    .category-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+    .cat-row { display: flex; align-items: center; gap: 10px; }
+    .cat-icon-wrap { width: 32px; height: 32px; border-radius: 9px; background: var(--bg-main, #F5F0E8); border: 1.5px solid var(--border, #E8DFD0); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .cat-info { flex: 1; min-width: 0; }
+    .cat-name { font-size: 12.5px; font-weight: 600; color: #1A1A1A; }
+    .cat-bar-wrap { width: 80px; height: 5px; background: var(--bg-main, #F5F0E8); border-radius: 3px; overflow: hidden; }
+    .cat-bar { height: 100%; border-radius: 3px; transition: width 0.8s; }
+    .cat-revenue { font-family: 'Bebas Neue',sans-serif; font-size: 15px; color: var(--text-dark, #1A1A1A); width: 56px; text-align: right; flex-shrink: 0; }
+    .donut-wrap { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; }
+    .donut-canvas-wrap { width: 110px; height: 110px; flex-shrink: 0; position: relative; }
+    .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .donut-center-val { font-family: 'Bebas Neue',sans-serif; font-size: 18px; color: var(--text-dark, #1A1A1A); line-height: 1; }
+    .donut-center-lbl { font-size: 9px; color: #9C8E7E; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700; }
+    .donut-legend { display: flex; flex-direction: column; gap: 7px; }
+    .donut-leg-item { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text-mid, #5C5346); }
+    .donut-leg-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ── SKELETON & UTILS ── */
+    .skel { background: linear-gradient(90deg,var(--border, #E8DFD0) 25%,rgba(232,223,208,0.4) 50%,var(--border, #E8DFD0) 75%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; border-radius: 8px; }
+    @keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+    .empty-state { text-align: center; padding: 32px 20px; color: #9C8E7E; }
+    .empty-state-icon { font-size: 32px; margin-bottom: 8px; }
+    .empty-state p { font-size: 13px; font-weight: 500; }
+    .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 10px 16px; border-radius: 10px; background: #1A1A1A; color: #fff; font-size: 13px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    /* ── RESPONSIVE ── */
+
+    @media (max-width: 1280px) {
+      .kpi-row { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      .middle-row, .bottom-row { grid-template-columns: 1fr 220px; gap: 10px; }
+    }
+
+    @media (max-width: 1024px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .middle-row, .bottom-row { grid-template-columns: 1fr 200px; gap: 10px; }
+      .dash-body { padding: 16px; gap: 14px; }
+      .chart-wrap { height: 190px; }
+    }
+
+    /* ── TABLET & MOBILE: stack everything, fix disappearing cards ── */
+    @media (max-width: 768px) {
+      .sidebar, .sidebar:not(.open) {
+        position: fixed !important; top: 0; left: 0;
+        height: 100%; width: 220px !important; z-index: 100;
+        transform: translateX(-100%) !important;
+        transition: transform 0.28s cubic-bezier(.4,0,.2,1) !important;
+        overflow: hidden !important;
+      }
+      .sidebar.open { transform: translateX(0) !important; overflow: visible !important; }
+      .sidebar.open .sidebar-logo .logo-text,
+      .sidebar.open .nav-section-label,
+      .sidebar.open .nav-item span,
+      .sidebar.open .user-info { display: block !important; }
+      .sidebar.open .nav-item { justify-content: flex-start !important; padding: 10px 12px !important; }
+      .sidebar.open .sidebar-user { justify-content: flex-start !important; }
+      .sidebar.open .sidebar-logo { justify-content: flex-start !important; padding: 22px 20px !important; }
+
+      .top-header { padding-left: 62px !important; }
+      .header-divider { display: none; }
+      .period-tab { padding: 5px 10px; font-size: 11px; }
+
+      .dash-body { padding: 12px; gap: 12px; overflow-y: auto; }
+
+      /* KPI: 2 columns */
+      .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .kpi-card { padding: 14px 16px; gap: 8px; }
+      .kpi-value { font-size: 28px; }
+
+      /* Charts + side panels: single column, side panel ALWAYS visible */
+      .middle-row, .bottom-row {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px;
+      }
+
+      /* Side panel: always auto height so cards are never squished */
+      .side-panel {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 10px;
+        height: auto !important;
+      }
+
+      /* Feature card (Total Revenue) */
+      .feature-card {
+        flex: 1;
+        min-height: 140px;
+        height: auto !important;
+      }
+
+      /* Best seller card — fixed height so it never collapses */
+      .best-seller-card {
+        flex: 1;
+        height: 200px !important;
+        min-height: 200px !important;
+      }
+
+      .chart-wrap { height: 170px; }
+      .chart-card { padding: 16px; }
+
+      /* Category breakdown */
+      #categoryCard > div { grid-template-columns: 1fr !important; gap: 16px; }
+      .donut-wrap { flex-direction: row !important; gap: 20px; align-items: center; justify-content: center; }
+      .donut-canvas-wrap { width: 90px; height: 90px; }
+    }
+
+    @media (max-width: 580px) {
+      .kpi-row { gap: 8px; }
+      .kpi-card { padding: 12px 14px; gap: 6px; }
+      .kpi-value { font-size: 24px; }
+      .kpi-label { font-size: 9.5px; }
+      .kpi-icon { top: 12px; right: 12px; font-size: 16px; }
+
+      /* Stack revenue + best seller vertically on small phones */
+      .side-panel {
+        flex-direction: column !important;
+      }
+      .feature-card { min-height: 120px; }
+      .best-seller-card { height: 240px !important; min-height: 240px !important; }
+
+      .chart-wrap { height: 150px; }
+      .section-title { font-size: 18px; }
+      .dash-body { padding: 10px; gap: 10px; }
+    }
+
+    @media (max-width: 400px) {
+      .top-header { height: 52px; padding-left: 56px !important; }
+      .header-date-day { font-size: 15px; }
+      .period-tab { padding: 4px 7px; font-size: 10px; }
+      .kpi-card { padding: 10px 12px; border-radius: 12px; }
+      .kpi-value { font-size: 22px; }
+      .chart-card { padding: 12px; border-radius: 14px; }
+      .donut-canvas-wrap { width: 80px; height: 80px; }
+    }
+  /* ══════════════════════════════════════════════════════
+     DARK MODE — Complete coverage
+     ══════════════════════════════════════════════════════ */
+  html[data-theme="dark"] {
+    --bg-main:   #0F0F0F;
+    --bg-card:   #181818;
+    --bg-panel:  #181818;
+    --border:    rgba(255,255,255,0.08);
+    --text-dark: #F0EBE0;
+    --text-mid:  #A09080;
+    --text-light:#5A5046;
+    --accent:    #C8A96E;
+    --primary:   #1A1A1A;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  html[data-theme="dark"] body { background: #0F0F0F; color: #F0EBE0; }
+
+  /* Layout */
+  html[data-theme="dark"] .app-shell { background: #0F0F0F; }
+  html[data-theme="dark"] .main-content { background: #0F0F0F; }
+
+  /* Header */
+  html[data-theme="dark"] .top-header { background: #111 !important; border-color: rgba(255,255,255,0.07) !important; }
+  html[data-theme="dark"] .top-header h1 { color: #F0EBE0 !important; }
+
+  /* Cards & Panels */
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-label { color: #5A5046; }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-value { color: #F0EBE0; }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-sub { color: #5A5046; }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-footer { color: #5A5046; }
+  html[data-theme="dark"] .chart-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .panel { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .section-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .stat-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+
+  /* Section titles */
+  html[data-theme="dark"] .section-title { color: #F0EBE0; }
+  html[data-theme="dark"] .section-subtitle { color: #5A5046; }
+  html[data-theme="dark"] .panel-title { color: #F0EBE0; }
+  html[data-theme="dark"] .panel-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .panel-badge { background: #222; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .section-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .section-sub { color: #5A5046; }
+  html[data-theme="dark"] .stat-label { color: #5A5046; }
+  html[data-theme="dark"] .stat-value { color: #C8A96E; }
+  html[data-theme="dark"] .stat-sub { color: #5A5046; }
+
+  /* Charts — axis labels & gridlines */
+  html[data-theme="dark"] .chart-card .section-title { color: #F0EBE0; }
+  html[data-theme="dark"] .legend-item { color: #A09080; }
+  html[data-theme="dark"] .donut-center-val { color: #F0EBE0; }
+  html[data-theme="dark"] .donut-center-lbl { color: #5A5046; }
+  html[data-theme="dark"] .donut-leg-item { color: #A09080; }
+  html[data-theme="dark"] .cat-icon-wrap { background: #222; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .cat-name { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-revenue { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-bar-wrap { background: rgba(255,255,255,0.06); }
+
+  /* Tables */
+  html[data-theme="dark"] .orders-table th,
+  html[data-theme="dark"] .inv-table th { background: #111; color: #5A5046; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .orders-table td,
+  html[data-theme="dark"] .inv-table td { color: #F0EBE0; border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .orders-table tr:hover td,
+  html[data-theme="dark"] .inv-table tr:hover td { background: rgba(255,255,255,0.03); }
+  html[data-theme="dark"] .inv-table-wrap { background: #181818; }
+  html[data-theme="dark"] .item-name { color: #F0EBE0; }
+  html[data-theme="dark"] .item-cat  { color: #5A5046; }
+  html[data-theme="dark"] .price-cell { color: #F0EBE0; }
+  html[data-theme="dark"] .stock-bar-wrap { background: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .action-btn { background: #222; border-color: rgba(255,255,255,0.1); color: #A09080; }
+  html[data-theme="dark"] .action-btn:hover { border-color: #C8A96E; color: #C8A96E; background: rgba(200,169,110,0.08); }
+
+  /* Search & filters */
+  html[data-theme="dark"] .search-wrap { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .search-wrap input { color: #F0EBE0; }
+  html[data-theme="dark"] .search-box { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .search-box input { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-select,
+  html[data-theme="dark"] .cat-filter,
+  html[data-theme="dark"] .form-select { background: #181818; border-color: rgba(255,255,255,0.08); color: #F0EBE0; }
+  html[data-theme="dark"] .filter-bar { background: #111; border-color: rgba(255,255,255,0.07); }
+  html[data-theme="dark"] .period-tab { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .period-tab:hover:not(.active) { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .sort-chip { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .sort-chip:hover:not(.active) { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .period-tabs { background: #181818; border-color: rgba(255,255,255,0.08); }
+
+  /* Buttons */
+  html[data-theme="dark"] .btn-ghost { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .btn-ghost:hover { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .btn-outline { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .btn-outline:hover { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .refresh-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .refresh-btn:hover { border-color: #C8A96E; color: #C8A96E; }
+  html[data-theme="dark"] .icon-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .export-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #C8A96E; }
+  html[data-theme="dark"] .page-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .page-btn:hover:not(.active):not(:disabled) { border-color: #C8A96E; color: #F0EBE0; }
+
+  /* Modals */
+  html[data-theme="dark"] .modal,
+  html[data-theme="dark"] .m-box { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-head,
+  html[data-theme="dark"] .m-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-foot,
+  html[data-theme="dark"] .m-footer { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-title,
+  html[data-theme="dark"] .m-title { color: #F0EBE0; }
+  html[data-theme="dark"] .modal-close,
+  html[data-theme="dark"] .m-close { background: #222; color: #A09080; }
+  html[data-theme="dark"] .modal-close:hover,
+  html[data-theme="dark"] .m-close:hover { background: #2a2a2a; }
+  html[data-theme="dark"] .form-input,
+  html[data-theme="dark"] .modal-input,
+  html[data-theme="dark"] .form-textarea,
+  html[data-theme="dark"] .form-select { background: #111; border-color: rgba(255,255,255,0.1); color: #F0EBE0; }
+  html[data-theme="dark"] .form-label,
+  html[data-theme="dark"] .modal-label,
+  html[data-theme="dark"] .form-label { color: #A09080; }
+  html[data-theme="dark"] .form-hint { color: #5A5046; }
+  html[data-theme="dark"] .form-input:focus,
+  html[data-theme="dark"] .modal-input:focus,
+  html[data-theme="dark"] .form-textarea:focus { border-color: #C8A96E; background: #181818; }
+
+  /* Customer directory */
+  html[data-theme="dark"] .customer-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .customer-name { color: #F0EBE0; }
+  html[data-theme="dark"] .customer-phone { color: #5A5046; }
+  html[data-theme="dark"] .customer-stat { background: #111; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .customer-stat-lbl { color: #5A5046; }
+  html[data-theme="dark"] .loyalty-bar-wrap { background: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .tier-platinum { background: rgba(99,102,241,0.2); color: #818CF8; border-color: rgba(99,102,241,0.4); }
+  html[data-theme="dark"] .tier-gold { background: rgba(200,169,110,0.2); color: #C8A96E; border-color: rgba(200,169,110,0.4); }
+  html[data-theme="dark"] .tier-silver { background: rgba(200,200,200,0.15); color: #C0C0C0; border-color: rgba(200,200,200,0.3); }
+  html[data-theme="dark"] .tier-bronze { background: rgba(205,127,50,0.2); color: #CD7F32; border-color: rgba(205,127,50,0.4); }
+  html[data-theme="dark"] .detail-section { background: #111; }
+  html[data-theme="dark"] .detail-section-title { color: #5A5046; }
+  html[data-theme="dark"] .detail-row { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .detail-label { color: #5A5046; }
+  html[data-theme="dark"] .detail-value { color: #F0EBE0; }
+  html[data-theme="dark"] .detail-stat-box { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .detail-stat-lbl { color: #5A5046; }
+
+  /* Inventory */
+  html[data-theme="dark"] .cat-icon-box { background: #222; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .cat-info .cat-name { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-items-count { color: #5A5046; }
+  html[data-theme="dark"] .cat-val { color: #F0EBE0; }
+  html[data-theme="dark"] .alert-item { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .alert-name { color: #F0EBE0; }
+  html[data-theme="dark"] .alert-detail { color: #5A5046; }
+  html[data-theme="dark"] .no-alerts { color: #5A5046; }
+  html[data-theme="dark"] .item-emoji { background: #222; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal { background: #181818; }
+  html[data-theme="dark"] .modal-title { color: #F0EBE0; }
+  html[data-theme="dark"] .modal-cancel { background: #222; border-color: rgba(255,255,255,0.1); color: #A09080; }
+  html[data-theme="dark"] .modal-input { background: #111; border-color: rgba(255,255,255,0.1); color: #F0EBE0; }
+
+  /* Orders page */
+  html[data-theme="dark"] .status-tab { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .status-tab.active { background: #1A1A1A; color: #C8A96E; }
+  html[data-theme="dark"] .strip-label { color: #5A5046; }
+  html[data-theme="dark"] .strip-value { color: #F0EBE0; }
+  html[data-theme="dark"] .strip-sub { color: #5A5046; }
+  html[data-theme="dark"] .panel-count { color: #5A5046; }
+  html[data-theme="dark"] .order-id { color: #F0EBE0; }
+  html[data-theme="dark"] .o-modal-body { background: #181818; }
+  html[data-theme="dark"] .detail-label { color: #5A5046; }
+  html[data-theme="dark"] .detail-value { color: #F0EBE0; }
+  html[data-theme="dark"] .totals-block { background: #111; }
+  html[data-theme="dark"] .item-qty { background: #222; border-color: rgba(255,255,255,0.08); color: #F0EBE0; }
+  html[data-theme="dark"] .o-modal-close { background: #222; color: #A09080; }
+
+  /* Sales report */
+  html[data-theme="dark"] .summary-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .summary-card .card-label { color: #5A5046; }
+  html[data-theme="dark"] .summary-card .card-value { color: #C8A96E; }
+  html[data-theme="dark"] .summary-card .card-sub { color: #5A5046; }
+  html[data-theme="dark"] .report-grid .panel { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .bar-label { color: #5A5046; }
+  html[data-theme="dark"] .bar-val { color: #A09080; }
+  html[data-theme="dark"] .item-name { color: #F0EBE0; }
+  html[data-theme="dark"] .item-cat { color: #5A5046; }
+  html[data-theme="dark"] .item-qty { color: #5A5046; }
+  html[data-theme="dark"] .item-rev { color: #C8A96E; }
+  html[data-theme="dark"] .cat-amt { color: #A09080; }
+  html[data-theme="dark"] .date-field { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .date-field input[type="date"] { color: #F0EBE0; background: transparent; }
+
+  /* Shift & Cash log */
+  html[data-theme="dark"] .tab-bar { background: #111; border-color: rgba(255,255,255,0.07); }
+  html[data-theme="dark"] .tab-btn { color: #5A5046; }
+  html[data-theme="dark"] .tab-btn.active { color: #F0EBE0; background: #181818; border-color: rgba(255,255,255,0.08) rgba(255,255,255,0.08) #0F0F0F; }
+  html[data-theme="dark"] .shift-banner { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .shift-banner-title { color: #F0EBE0; }
+  html[data-theme="dark"] .shift-banner-meta { color: #5A5046; }
+  html[data-theme="dark"] .cash-log-row { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .cash-log-type { color: #A09080; }
+  html[data-theme="dark"] .cash-log-desc { color: #5A5046; }
+  html[data-theme="dark"] .cash-log-amt { color: #F0EBE0; }
+  html[data-theme="dark"] .shift-row { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .shift-id { color: #F0EBE0; }
+  html[data-theme="dark"] .shift-cashier { color: #A09080; }
+  html[data-theme="dark"] .shift-date { color: #5A5046; }
+  html[data-theme="dark"] .variance-pos { color: #4CAF7D; }
+  html[data-theme="dark"] .variance-neg { color: #EF4444; }
+
+  /* Menu management */
+  html[data-theme="dark"] .menu-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .menu-card-top { background: #222; }
+  html[data-theme="dark"] .menu-card-cat { color: #C8A96E; }
+  html[data-theme="dark"] .menu-card-name { color: #F0EBE0; }
+  html[data-theme="dark"] .menu-card-desc { color: #5A5046; }
+  html[data-theme="dark"] .menu-card-price { color: #F0EBE0; }
+  html[data-theme="dark"] .card-btn { background: #222; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .card-btn:hover { border-color: #C8A96E; background: rgba(200,169,110,0.1); }
+  html[data-theme="dark"] .cat-table th { background: #111; color: #5A5046; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .cat-table td { border-color: rgba(255,255,255,0.05); color: #F0EBE0; }
+  html[data-theme="dark"] .cat-table tr:hover td { background: rgba(255,255,255,0.03); }
+  html[data-theme="dark"] .view-tab { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .view-tab.active { background: #1A1A1A; color: #C8A96E; }
+  html[data-theme="dark"] .img-upload-drop { background: #111; border-color: rgba(255,255,255,0.1); }
+  html[data-theme="dark"] .img-upload-drop:hover { border-color: #C8A96E; background: rgba(200,169,110,0.04); }
+  html[data-theme="dark"] .toggle-label { color: #F0EBE0; }
+  html[data-theme="dark"] .toggle-sub { color: #5A5046; }
+  html[data-theme="dark"] .toggle-slider { background: rgba(255,255,255,0.1); }
+
+  /* Scrollbars in dark mode */
+  html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+  html[data-theme="dark"] ::-webkit-scrollbar-track { background: transparent; }
+
+  /* Skeleton shimmer in dark mode */
+  html[data-theme="dark"] .skel,
+  html[data-theme="dark"] .skeleton { background: linear-gradient(90deg,#1e1e1e 25%,#2a2a2a 50%,#1e1e1e 75%); background-size:400% 100%; }
+
+  </style>
+</head>
+<body>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebarNav()"></div>
+<button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebarNav()" aria-label="Toggle menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main-content">
+    <!-- TOP HEADER -->
+    <header class="top-header">
+      <div class="header-date">
+        <div class="header-date-day" id="todayDay">SUNDAY</div>
+        <div class="header-date-sub" id="todayDate">March 22, 2026</div>
+      </div>
+      <div class="header-divider"></div>
+      <div class="period-tabs">
+        <button class="period-tab active" onclick="setPeriod('today',this)">Today</button>
+        <button class="period-tab" onclick="setPeriod('week',this)">Week</button>
+        <button class="period-tab" onclick="setPeriod('month',this)">Month</button>
+      </div>
+      <div class="header-spacer"></div>
+      <button class="refresh-btn" onclick="loadAll()" title="Refresh">↺</button>
+    </header>
+
+    <!-- DASHBOARD BODY -->
+    <div class="dash-body" id="dashBody">
+
+      <!-- KPI ROW -->
+      <div class="kpi-row" id="kpiRow">
+        <div class="kpi-card skel" style="height:110px"></div>
+        <div class="kpi-card skel" style="height:110px"></div>
+        <div class="kpi-card skel" style="height:110px"></div>
+        <div class="kpi-card skel" style="height:110px"></div>
+      </div>
+
+      <!-- MIDDLE: Hourly Sales + Top Seller Feature -->
+      <div class="middle-row">
+        <div class="chart-card" id="hourlySalesCard">
+          <div class="chart-card-header">
+            <div>
+              <div class="section-title">ITEMS SOLD ANALYTICS</div>
+              <div class="section-subtitle" id="hourlySalesSubtitle">Orders by hour — today</div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Sales (₱)</div>
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(200,169,110,0.3)"></div>Orders</div>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="hourlyChart"></canvas></div>
+        </div>
+
+        <div class="side-panel">
+          <!-- Total Sales Feature Card -->
+          <div class="feature-card" id="revenueFeatureCard">
+            <div class="feature-tag">☕ Today</div>
+            <div class="feature-title">TOTAL<br><span>REVENUE</span><br>EARNED</div>
+            <div class="feature-meta">
+              Grand total incl. VAT<br>
+              <span class="feature-value" id="featureRevenue">₱0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM: Summary Chart + Category Breakdown -->
+      <div class="bottom-row">
+        <div class="chart-card" id="summaryCard">
+          <div class="chart-card-header">
+            <div>
+              <div class="section-title">SUMMARY OF SALES</div>
+              <div class="section-subtitle" id="summarySubtitle">Sales trend</div>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="summaryChart"></canvas></div>
+        </div>
+
+        <div class="side-panel">
+          <!-- Best Seller Hero Card -->
+          <div class="best-seller-card" id="topItemsCard">
+            <!-- bg image injected by JS -->
+            <div class="bs-card-overlay"></div>
+            <div class="bs-header">
+              <div>
+                <div class="section-title" style="font-size:24px;color:#fff;letter-spacing:3px">BEST SELLER</div>
+                <div class="bs-period-label" id="bsPeriodLabel">This period</div>
+              </div>
+            </div>
+            <div class="bs-middle-spacer"></div>
+            <div class="bs-bottom" id="topItemsList">
+              <div class="skel" style="height:60px;border-radius:10px;opacity:0.15;margin-bottom:8px"></div>
+              <div class="skel" style="height:40px;border-radius:10px;opacity:0.1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FULL WIDTH: Category Breakdown -->
+      <div class="chart-card" id="categoryCard">
+        <div class="chart-card-header">
+          <div>
+            <div class="section-title">CATEGORY BREAKDOWN</div>
+            <div class="section-subtitle">Sales contribution per category</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:180px 1fr;gap:28px;align-items:center;">
+          <div>
+            <div class="donut-wrap" style="flex-direction:column;gap:12px;">
+              <div class="donut-canvas-wrap">
+                <canvas id="donutChart"></canvas>
+                <div class="donut-center">
+                  <div class="donut-center-val" id="donutTotal">₱0</div>
+                  <div class="donut-center-lbl">Total</div>
+                </div>
+              </div>
+              <div class="donut-legend" id="donutLegend"></div>
+            </div>
+          </div>
+          <div class="category-grid" id="categoryGrid">
+            <div class="skel" style="height:36px;border-radius:8px"></div>
+            <div class="skel" style="height:36px;border-radius:8px"></div>
+            <div class="skel" style="height:36px;border-radius:8px"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dash-body -->
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="js/auth-check.js"></script>
+<script>
+const _user = requireLogin(['admin']);
+if (_user) buildNav('dashboard', _user);
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   PADAYON KAPETID — ANALYTICS DASHBOARD
+   ══════════════════════════════════════════════════════════════ */
+
+let currentPeriod = 'today';
+let charts = {};
+
+// ── DATE HEADER ─────────────────────────────────────────────────
+(function() {
+  const now = new Date();
+  const days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('todayDay').textContent = days[now.getDay()];
+  document.getElementById('todayDate').textContent = `${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+})();
+
+// ── PERIOD ──────────────────────────────────────────────────────
+function setPeriod(p, btn) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  loadAll();
+}
+
+// ── COLORS ──────────────────────────────────────────────────────
+const CAT_COLORS = [
+  '#C8A96E','#1A1A1A','#8B6840','#D4BC8A','#5C5346',
+  '#9C8E7E','#E8DFD0','#3D2B1F','#A07850','#6B4C30'
+];
+
+// ── TOAST ───────────────────────────────────────────────────────
+function toast(msg) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ── FETCH HELPER ─────────────────────────────────────────────────
+async function apiFetch(action, extra = '') {
+  const url = `./php/report.php?action=${action}&period=${currentPeriod}${extra}`;
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    if (!res.ok) {
+      console.error('[Dashboard] HTTP ' + res.status + ' from ' + url, text);
+      showApiError('Server error ' + res.status + ' on action: ' + action);
+      return null;
+    }
+    try {
+      const json = JSON.parse(text);
+      if (json && json.error) {
+        console.error('[Dashboard] API error:', json.error);
+        showApiError(json.error);
+        return null;
+      }
+      return json;
+    } catch(parseErr) {
+      console.error('[Dashboard] JSON parse failed for ' + action + ':', text.substring(0, 300));
+      showApiError('PHP returned non-JSON for: ' + action + '. Check php/report.php for errors.');
+      return null;
+    }
+  } catch(netErr) {
+    console.error('[Dashboard] Network error for ' + url + ':', netErr.message);
+    showApiError('Cannot reach php/report.php — check your server.');
+    return null;
+  }
+}
+
+// ── API ERROR BANNER ──────────────────────────────────────────────
+let _errShown = false;
+function showApiError(msg) {
+  if (_errShown) return;
+  _errShown = true;
+  const banner = document.createElement('div');
+  banner.id = 'apiBanner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7f1d1d;color:#fecaca;font-size:12.5px;font-weight:600;padding:9px 20px;display:flex;align-items:center;gap:10px;font-family:DM Sans,sans-serif;';
+  banner.innerHTML = '<span style="font-size:16px">⚠</span><span>DB not connected: ' + msg + '</span>'
+    + '<span style="margin-left:auto;opacity:.6;font-size:11px">Open DevTools Console (F12) for details</span>'
+    + '<button onclick="document.getElementById(\'apiBanner\').remove();_errShown=false" style="background:rgba(255,255,255,.15);border:none;color:#fecaca;border-radius:5px;padding:3px 10px;cursor:pointer;font-size:11px;margin-left:8px">✕</button>';
+  document.body.prepend(banner);
+}
+
+// ── DEMO DATA ────────────────────────────────────────────────────
+function demoSummary() {
+  return { total_orders:47, completed_orders:42, pending_orders:5, cancelled_orders:2,
+    total_subtotal:4820, total_tax:578.40, total_revenue:5398.40, avg_order:114.86, items_sold:134 };
+}
+function demoHourly() {
+  const hours = [7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+  return hours.map(h => ({ hour:h, revenue: Math.round((Math.random()*400+80)*10)/10, orders: Math.floor(Math.random()*8+1) }));
+}
+function demoTopItems() {
+  return [
+    {name:'Spanish Latte',  category:'Coffee Based',  qty:28, revenue:2492},
+    {name:'Caramel Macchiato',category:'Premium',     qty:22, revenue:2398},
+    {name:'Classic Matcha', category:'Matcha Based',  qty:19, revenue:1691},
+    {name:'Tapsilog',       category:'Silog Meals',   qty:17, revenue:1853},
+    {name:'Biscoff Latte',  category:'Premium',       qty:15, revenue:1635},
+  ];
+}
+function demoCategories() {
+  return [
+    {category:'Coffee Based', icon:'☕', revenue:8420},
+    {category:'Premium Drinks',icon:'✨',revenue:6830},
+    {category:'Matcha Based', icon:'🍵', revenue:4210},
+    {category:'Silog Meals',  icon:'🍳', revenue:3980},
+    {category:'Non-Coffee',   icon:'🧋', revenue:2650},
+    {category:'Snacks',       icon:'🍟', revenue:1840},
+  ];
+}
+function demoByDay() {
+  const labels = currentPeriod === 'week'
+    ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    : Array.from({length:30},(_,i)=>`${i+1}`);
+  return labels.map((d,i) => ({
+    day: d, day_name: d,
+    revenue: Math.round((Math.random()*3000+500)*10)/10,
+    orders: Math.floor(Math.random()*40+5)
+  }));
+}
+
+// ── FORMAT ──────────────────────────────────────────────────────
+function fmt(n) {
+  n = parseFloat(n)||0;
+  if(n>=1000) return '₱'+(n/1000).toFixed(1)+'K';
+  return '₱'+n.toFixed(0);
+}
+function fmtFull(n) { return '₱'+(parseFloat(n)||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// ── DESTROY CHART ────────────────────────────────────────────────
+function destroyChart(key) {
+  if (charts[key]) { charts[key].destroy(); delete charts[key]; }
+}
+
+// ── RENDER KPI ───────────────────────────────────────────────────
+function renderKPI(s) {
+  const row = document.getElementById('kpiRow');
+  row.innerHTML = `
+    <div class="kpi-card accent-card">
+      <span class="kpi-icon">💰</span>
+      <div class="kpi-label">Today's Total Sales</div>
+      <div class="kpi-value">${fmt(s.total_subtotal)}</div>
+      <div class="kpi-footer">
+        <span class="kpi-badge neutral">+VAT</span>
+        Subtotal ${fmt(s.total_subtotal)}
+      </div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">🧾</span>
+      <div class="kpi-label">Total Orders</div>
+      <div class="kpi-value">${parseInt(s.total_orders)||0}</div>
+      <div class="kpi-footer">
+        <span class="kpi-badge up">↑</span>
+        ${parseInt(s.completed_orders)||0} completed
+      </div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">☕</span>
+      <div class="kpi-label">Items Sold</div>
+      <div class="kpi-value">${parseInt(s.items_sold)||0}</div>
+      <div class="kpi-footer">
+        <span class="kpi-badge neutral">${parseInt(s.pending_orders)||0} pending</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">📊</span>
+      <div class="kpi-label">Avg Order Value</div>
+      <div class="kpi-value">${fmt(s.avg_order)}</div>
+      <div class="kpi-footer">
+        <span class="kpi-badge up">↑</span>
+        Per transaction
+      </div>
+    </div>
+  `;
+  document.getElementById('featureRevenue').textContent = fmtFull(s.total_subtotal);
+}
+
+// ── RENDER HOURLY / DAILY CHART ──────────────────────────────────
+function getIsDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+function renderHourlyChart(data) {
+  const isDark = getIsDark();
+  destroyChart('hourly');
+  const isHourly = currentPeriod === 'today';
+  const labels = data.map(d => isHourly ? `${d.hour}:00` : (d.day_name || d.day));
+  const revenues = data.map(d => parseFloat(d.revenue)||0);
+  const orders = data.map(d => parseInt(d.orders)||0);
+
+  document.getElementById('hourlySalesSubtitle').textContent = isHourly
+    ? 'Orders by hour — today'
+    : `Sales by ${currentPeriod === 'week' ? 'day' : 'date'}`;
+
+  const ctx = document.getElementById('hourlyChart').getContext('2d');
+  charts['hourly'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Total Sales (₱)',
+          data: revenues,
+          backgroundColor: 'rgba(200,169,110,0.85)',
+          borderRadius: 6,
+          borderSkipped: false,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Orders',
+          data: orders,
+          type: 'line',
+          borderColor: isDark ? '#C8A96E' : '#1A1A1A',
+          backgroundColor: isDark ? 'rgba(200,169,110,0.12)' : 'rgba(26,26,26,0.08)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: isDark ? '#C8A96E' : '#1A1A1A',
+          tension: 0.4,
+          fill: false,
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark ? '#3a3a3a' : '#1A1A1A',
+          titleColor: '#C8A96E',
+          bodyColor: '#fff',
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: {
+            label: ctx => ctx.datasetIndex===0 ? ` ₱${ctx.parsed.y.toFixed(0)}` : ` ${ctx.parsed.y} orders`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display:false }, ticks: { color: isDark ? '#5A5046' : '#9C8E7E', font:{size:10} } },
+        y: {
+          position: 'left',
+          grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(232,223,208,0.6)', drawBorder:false },
+          ticks: { color: isDark ? '#5A5046' : '#9C8E7E', font:{size:10}, callback: v => '₱'+v },
+        },
+        y1: {
+          position: 'right', display: false,
+          grid: { drawOnChartArea: false }
+        }
+      }
+    }
+  });
+}
+
+// ── RENDER SUMMARY CHART ─────────────────────────────────────────
+function renderSummaryChart(data) {
+  const isDark = getIsDark();
+  destroyChart('summary');
+  const isToday = currentPeriod === 'today';
+  const labels = isToday
+    ? data.map(d => `${d.hour}:00`)
+    : data.map(d => d.day_name || d.day);
+  const revenues = data.map(d => parseFloat(d.revenue)||0);
+
+  let subtitleText = isToday ? 'Hourly sales — today'
+    : currentPeriod === 'week' ? 'Daily sales — this week'
+    : 'Daily sales — this month';
+  document.getElementById('summarySubtitle').textContent = subtitleText;
+
+  // Generate a "previous period" comparison (demo: 75–90% of current)
+  const prevRevenues = revenues.map(v => Math.round(v * (0.65 + Math.random()*0.25)));
+
+  const ctx = document.getElementById('summaryChart').getContext('2d');
+  charts['summary'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Current Period',
+          data: revenues,
+          backgroundColor: '#C8A96E',
+          borderRadius: 6,
+          borderSkipped: false,
+        },
+        {
+          label: 'Previous Period',
+          data: prevRevenues,
+          backgroundColor: '#1A1A1A',
+          borderRadius: 6,
+          borderSkipped: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: { color: isDark ? '#A09080' : '#5C5346', font:{size:11}, usePointStyle:true, pointStyleWidth:12 }
+        },
+        tooltip: {
+          backgroundColor: '#1A1A1A',
+          titleColor: '#C8A96E',
+          bodyColor: '#fff',
+          padding: 10,
+          cornerRadius: 8,
+          callbacks: { label: ctx => ` ₱${ctx.parsed.y.toFixed(0)}` }
+        }
+      },
+      scales: {
+        x: { grid:{display:false}, ticks:{color: isDark ? '#5A5046' : '#9C8E7E',font:{size:10}}, stacked:false },
+        y: {
+          grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(232,223,208,0.6)', drawBorder:false },
+          ticks: { color: isDark ? '#5A5046' : '#9C8E7E', font:{size:10}, callback: v => '₱'+v }
+        }
+      }
+    }
+  });
+}
+
+// ── RENDER TOP ITEMS (Full-card bg image) ────────────────────────
+function renderTopItems(items) {
+  const card = document.getElementById('topItemsCard');
+  const el   = document.getElementById('topItemsList');
+
+  // Remove any previously injected bg
+  const oldBg = card.querySelector('.bs-card-bg, .bs-card-bg-placeholder');
+  if (oldBg) oldBg.remove();
+
+  if (!items || !items.length) {
+    el.innerHTML = '<div style="text-align:center;padding:24px 0;color:rgba(255,255,255,0.25);font-size:13px;">No sales data yet</div>';
+    return;
+  }
+
+  const catEmoji = {
+    'Coffee Based':'☕','Non-Coffee':'🧋','Matcha Based':'🍵',
+    'Premium Drinks':'✨','Silog Meals':'🍳','Snacks':'🍟',
+    'Sandwiches':'🥪','Buldak':'🌶️','Premium':'✨'
+  };
+
+  // ── Inject full-card background image (#1 product) ──
+  const top = items[0];
+  const topEmoji = catEmoji[top.category] || '🍽️';
+  if (top.image_url) {
+    const bgImg = document.createElement('img');
+    bgImg.className = 'bs-card-bg';
+    bgImg.src = top.image_url;
+    bgImg.alt = top.name;
+    bgImg.onerror = function() {
+      this.remove();
+      const ph = document.createElement('div');
+      ph.className = 'bs-card-bg-placeholder';
+      ph.textContent = topEmoji;
+      card.insertBefore(ph, card.firstChild);
+    };
+    card.insertBefore(bgImg, card.firstChild);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'bs-card-bg-placeholder';
+    ph.textContent = topEmoji;
+    card.insertBefore(ph, card.firstChild);
+  }
+
+  // ── #1 Hero info block ──
+  const heroHTML = '<div class="bs-hero">'
+    + '<div class="bs-hero-badge">1</div>'
+    + '<div class="bs-hero-name">' + top.name + '</div>'
+    + '<div class="bs-hero-meta">'
+    +   '<span class="bs-hero-cat">' + (top.category||'—') + '</span>'
+    +   '<span class="bs-hero-qty">' + top.qty + ' SOLD</span>'
+    + '</div>'
+    + '</div>';
+
+  // ── Runners-up (#2–#5) ──
+  const runnersHTML = items.slice(1,5).map(function(item, idx) {
+    const rank  = idx + 2;
+    const emoji = catEmoji[item.category] || '🍽️';
+    const rImg  = item.image_url
+      ? '<img class="bs-runner-img" src="' + item.image_url + '" alt="' + item.name
+          + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+        + '<div class="bs-runner-placeholder" style="display:none">' + emoji + '</div>'
+      : '<div class="bs-runner-placeholder">' + emoji + '</div>';
+    const cls = rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+    return '<div class="bs-runner-row">'
+      + rImg
+      + '<div class="bs-runner-badge ' + cls + '">' + rank + '</div>'
+      + '<div class="bs-runner-info">'
+      +   '<div class="bs-runner-name">' + item.name + '</div>'
+      +   '<div class="bs-runner-cat">' + (item.category||'—') + '</div>'
+      + '</div>'
+      + '<div class="bs-runner-qty">' + item.qty + '</div>'
+      + '</div>';
+  }).join('');
+
+  el.innerHTML = heroHTML + '<div class="bs-runners" style="margin-top:8px">' + runnersHTML + '</div>';
+}
+
+// ── RENDER CATEGORIES ─────────────────────────────────────────────
+function renderCategories(cats) {
+  if (!cats || !cats.length) {
+    document.getElementById('categoryGrid').innerHTML = `<div class="empty-state"><p>No data</p></div>`;
+    return;
+  }
+  const total = cats.reduce((s,c)=>s+parseFloat(c.revenue||0),0);
+  const maxRev = Math.max(...cats.map(c=>parseFloat(c.revenue||0)));
+
+  // Category grid rows
+  document.getElementById('categoryGrid').innerHTML = cats.map((c,i) => `
+    <div class="cat-row">
+      <div class="cat-icon-wrap">${c.icon||'🍽️'}</div>
+      <div class="cat-info">
+        <div class="cat-name">${c.category}</div>
+        <div style="font-size:11px;color:var(--text-3)">${Math.round((parseFloat(c.revenue)/total)*100)}% of sales</div>
+      </div>
+      <div class="cat-bar-wrap">
+        <div class="cat-bar" style="width:${Math.round((parseFloat(c.revenue)/maxRev)*100)}%;background:${CAT_COLORS[i%CAT_COLORS.length]}"></div>
+      </div>
+      <div class="cat-revenue">${fmt(c.revenue)}</div>
+    </div>
+  `).join('');
+
+  // Donut chart
+  destroyChart('donut');
+  document.getElementById('donutTotal').textContent = fmt(total);
+
+  const top5 = cats.slice(0,5);
+  const donutCtx = document.getElementById('donutChart').getContext('2d');
+  charts['donut'] = new Chart(donutCtx, {
+    type: 'doughnut',
+    data: {
+      labels: top5.map(c=>c.category),
+      datasets: [{
+        data: top5.map(c=>parseFloat(c.revenue)||0),
+        backgroundColor: CAT_COLORS.slice(0,top5.length),
+        borderWidth: 0,
+        hoverOffset: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '72%',
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          backgroundColor: '#1A1A1A',
+          titleColor: '#C8A96E',
+          bodyColor: '#fff',
+          callbacks: { label: ctx => ` ₱${ctx.parsed.toFixed(0)}` }
+        }
+      }
+    }
+  });
+
+  // Donut legend
+  document.getElementById('donutLegend').innerHTML = top5.map((c,i) => `
+    <div class="donut-leg-item">
+      <div class="donut-leg-dot" style="background:${CAT_COLORS[i]}"></div>
+      <span>${c.category}</span>
+    </div>
+  `).join('');
+}
+
+// ── DB STATUS BADGE ──────────────────────────────────────────────
+function setDbBadge(live) {
+  let badge = document.getElementById('dbBadge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'dbBadge';
+    badge.style.cssText = 'position:fixed;bottom:18px;right:20px;z-index:9998;'
+      + 'padding:6px 14px 6px 10px;border-radius:20px;font-size:11.5px;font-weight:600;'
+      + 'display:flex;align-items:center;gap:6px;box-shadow:0 3px 12px rgba(0,0,0,0.18);'
+      + 'font-family:DM Sans,sans-serif;transition:opacity 0.5s;cursor:default;';
+    document.body.appendChild(badge);
+  }
+  const dot = '<span style="width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;'
+    + (live ? 'background:#4CAF7D;box-shadow:0 0 6px #4CAF7D' : 'background:#E2A84B;box-shadow:0 0 6px #E2A84B')
+    + '"></span>';
+  badge.style.background = '#1A1A1A';
+  badge.style.border = '1px solid ' + (live ? 'rgba(76,175,125,0.3)' : 'rgba(226,168,75,0.3)');
+  badge.style.color  = live ? '#4CAF7D' : '#E2A84B';
+  badge.innerHTML    = dot + (live ? 'Live DB' : 'Demo mode');
+  badge.style.opacity = '1';
+  if (live) {
+    clearTimeout(badge._t);
+    badge._t = setTimeout(() => badge.style.opacity = '0.35', 4000);
+  }
+}
+
+// ── LOAD ALL ──────────────────────────────────────────────────────
+async function loadAll() {
+  // Reset error banner on each load
+  _errShown = false;
+  const existing = document.getElementById('apiBanner');
+  if (existing) existing.remove();
+
+  // ── Test DB connectivity first with summary ──
+  const summary = await apiFetch('summary');
+  const isLive  = summary !== null; // null = PHP failed; object = DB connected (even if zeros)
+  setDbBadge(isLive);
+
+  // KPI — use real data if connected, demo only if PHP unreachable
+  renderKPI(isLive ? summary : demoSummary());
+
+  // ── Time chart ──
+  const isToday = currentPeriod === 'today';
+  const timeData = isLive
+    ? await apiFetch(isToday ? 'by_hour' : 'by_day')
+    : null;
+  // Only fall back to demo when PHP is unreachable (isLive=false)
+  // Empty array [] from DB = no orders yet, show empty chart (not fake data)
+  const finalTimeData = isLive
+    ? (timeData || [])
+    : (isToday ? demoHourly() : demoByDay());
+  renderHourlyChart(finalTimeData);
+  renderSummaryChart(finalTimeData);
+
+  // ── Top items ──
+  const topItems = isLive ? await apiFetch('top_items') : null;
+  renderTopItems(isLive ? (topItems || []) : demoTopItems());
+
+  // ── Categories ──
+  const cats = isLive ? await apiFetch('by_category') : null;
+  renderCategories(isLive ? (cats || []) : demoCategories());
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+loadAll();
+
+// ── SIDEBAR TOGGLE (mobile) ───────────────────────────────────────
+function toggleSidebarNav() {
+  const sidebar  = document.getElementById('sidebar');
+  const toggle   = document.getElementById('sidebarToggle');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const isOpen   = sidebar.classList.contains('open');
+  if (isOpen) { closeSidebarNav(); } else {
+    sidebar.classList.add('open');
+    toggle.classList.add('open');
+    backdrop.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+}
+function closeSidebarNav() {
+  const sidebar  = document.getElementById('sidebar');
+  const toggle   = document.getElementById('sidebarToggle');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  sidebar.classList.remove('open');
+  toggle.classList.remove('open');
+  backdrop.classList.remove('show');
+  document.body.style.overflow = '';
+}
+// Close on nav click (mobile)
+document.addEventListener('click', function(e) {
+  if (e.target.closest('.nav-item') && window.innerWidth <= 768) closeSidebarNav();
+});
+</script>
+</body>
+</html>

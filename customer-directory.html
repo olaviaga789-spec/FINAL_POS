@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){var t=localStorage.getItem('pk_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<style>
+/* SIDEBAR OVERRIDE */
+.sidebar {
+  position: fixed !important; top: 0 !important; left: 0 !important;
+  height: 100% !important; width: 220px !important;
+  background: #1A1A1A !important; z-index: 100 !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1) !important;
+  overflow: hidden !important; display: flex !important; flex-direction: column !important;
+}
+.sidebar.open { transform: translateX(0) !important; overflow: visible !important; }
+.sidebar:not(.open) .logo-text,
+.sidebar:not(.open) .nav-section-label,
+.sidebar:not(.open) .nav-item span,
+.sidebar:not(.open) .user-info,
+.sidebar:not(.open) #logoutMenu { display: none !important; }
+.sidebar.open .logo-text,
+.sidebar.open .nav-section-label,
+.sidebar.open .nav-item span,
+.sidebar.open .user-info { display: block !important; }
+.sidebar.open .nav-item { justify-content: flex-start !important; padding: 10px 12px !important; }
+.sidebar.open .sidebar-user { justify-content: flex-start !important; }
+.sidebar.open .sidebar-logo { justify-content: flex-start !important; padding: 22px 20px !important; }
+.main-content { width: 100% !important; margin-left: 0 !important; }
+.top-header { padding-left: 66px !important; }
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; backdrop-filter: blur(2px); }
+.sidebar-backdrop.show { display: block; }
+#sidebarToggle {
+  display: flex !important; visibility: visible !important; opacity: 1 !important;
+  position: fixed !important; top: 14px !important; left: 14px !important;
+  z-index: 999999 !important; width: 42px !important; height: 42px !important;
+  border-radius: 10px !important; background: #1A1A1A !important;
+  border: none !important; cursor: pointer !important;
+  flex-direction: column !important; align-items: center !important;
+  justify-content: center !important; gap: 5px !important;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4) !important; padding: 0 !important;
+}
+#sidebarToggle span {
+  display: block !important; width: 20px !important; height: 2px !important;
+  background: #C8A96E !important; border-radius: 2px !important; transition: 0.22s !important;
+}
+#sidebarToggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg) !important; }
+#sidebarToggle.open span:nth-child(2) { opacity: 0 !important; }
+#sidebarToggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg) !important; }
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Directory — Padayon Kapetid</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=20260523">
+<style>
+/* ── LAYOUT ── */
+*, *::before, *::after { box-sizing: border-box; }
+body { overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; }
+.main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.top-header { height: 64px; flex-shrink: 0; background: var(--bg-card); border-bottom: 1.5px solid var(--border); display: flex; align-items: center; padding: 0 24px 0 66px; gap: 14px; }
+.top-header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; color: var(--text-dark); font-weight: 400; }
+.header-spacer { flex: 1; }
+
+/* ── FILTER BAR ── */
+.filter-bar { display: flex; gap: 10px; align-items: center; padding: 12px 24px; background: var(--bg-card); border-bottom: 1.5px solid var(--border); flex-shrink: 0; flex-wrap: wrap; }
+.search-wrap { display: flex; align-items: center; gap: 8px; background: var(--bg-main); border: 1.5px solid var(--border); border-radius: 10px; padding: 8px 14px; flex: 1; max-width: 320px; transition: 0.18s; }
+.search-wrap:focus-within { border-color: var(--accent); background: var(--bg-card); box-shadow: 0 0 0 3px rgba(200,169,110,0.1); }
+.search-wrap input { background: transparent; font-size: 13.5px; color: var(--text-dark); width: 100%; font-family: inherit; }
+.search-icon { color: var(--text-light); font-size: 15px; }
+
+/* ── PAGE BODY ── */
+.page-body { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.page-body::-webkit-scrollbar { width: 5px; }
+.page-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── KPI STRIP ── */
+.kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.kpi-card { background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px 20px; position: relative; overflow: hidden; transition: 0.2s; }
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.kpi-card.dark { background: #1A1A1A; border-color: #1A1A1A; }
+.kpi-icon { position: absolute; top: 16px; right: 18px; font-size: 22px; opacity: 0.3; }
+.kpi-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); margin-bottom: 6px; }
+.kpi-card.dark .kpi-label { color: rgba(200,169,110,0.5); }
+.kpi-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--text-dark); letter-spacing: 0.5px; line-height: 1; }
+.kpi-card.dark .kpi-value { color: #C8A96E; }
+.kpi-sub { font-size: 11.5px; color: var(--text-light); margin-top: 4px; }
+.kpi-card.dark .kpi-sub { color: rgba(255,255,255,0.25); }
+
+/* ── SECTION CARD ── */
+.section-card { background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 18px; overflow: hidden; flex: 1; display: flex; flex-direction: column; }
+.section-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap; gap: 10px; }
+.section-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: var(--text-dark); font-weight: 400; }
+.section-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.section-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* ── CUSTOMER GRID ── */
+.customer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; padding: 20px 22px; }
+
+/* ── CUSTOMER CARD ── */
+.customer-card {
+  background: var(--bg-main); border: 1.5px solid var(--border); border-radius: 16px;
+  padding: 18px; display: flex; flex-direction: column; gap: 12px;
+  transition: 0.2s; cursor: pointer; position: relative;
+}
+.customer-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.customer-card-head { display: flex; align-items: center; gap: 12px; }
+.customer-avatar {
+  width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #C8A96E, #D4BC8A);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #1A1A1A; letter-spacing: 0.5px;
+}
+.customer-name { font-size: 15px; font-weight: 700; color: var(--text-dark); line-height: 1.2; }
+.customer-phone { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.customer-card-body { display: flex; flex-direction: column; gap: 6px; }
+.customer-stat-row { display: flex; gap: 8px; }
+.customer-stat { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; text-align: center; }
+.customer-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: var(--accent); letter-spacing: 0.5px; display: block; line-height: 1; }
+.customer-stat-lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-light); display: block; margin-top: 2px; }
+.customer-card-foot { display: flex; gap: 6px; }
+.loyalty-bar-wrap { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; align-self: center; }
+.loyalty-bar { height: 100%; background: linear-gradient(to right, #C8A96E, #D4BC8A); border-radius: 3px; transition: width 0.8s; }
+.loyalty-pts { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--accent); white-space: nowrap; letter-spacing: 0.5px; }
+
+/* ── TIER BADGE ── */
+.tier-badge { position: absolute; top: 14px; right: 14px; padding: 3px 9px; border-radius: 100px; font-size: 10px; font-weight: 700; }
+.tier-bronze   { background: rgba(205,127,50,0.15); color: #A0622A; border: 1px solid rgba(205,127,50,0.3); }
+.tier-silver   { background: rgba(170,170,170,0.15); color: #888; border: 1px solid rgba(170,170,170,0.3); }
+.tier-gold     { background: rgba(200,169,110,0.2); color: #8B6840; border: 1px solid rgba(200,169,110,0.4); }
+.tier-platinum { background: rgba(99,102,241,0.12); color: #4338CA; border: 1px solid rgba(99,102,241,0.3); }
+
+/* ── BUTTONS ── */
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.18s; border: 1.5px solid transparent; font-family: inherit; }
+.btn-primary { background: #1A1A1A; color: #C8A96E; border-color: #1A1A1A; }
+.btn-primary:hover { background: #2a2a2a; box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+.btn-ghost   { background: var(--bg-main); color: var(--text-mid); border-color: var(--border); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--text-dark); }
+.btn-danger  { background: rgba(220,38,38,0.08); color: #B91C1C; border-color: rgba(220,38,38,0.2); }
+.btn-danger:hover { background: rgba(220,38,38,0.15); }
+.btn-success { background: rgba(76,175,125,0.1); color: #2E7D56; border-color: rgba(76,175,125,0.25); }
+.btn-success:hover { background: rgba(76,175,125,0.18); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(26,20,10,0.55); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: var(--bg-card); border-radius: 22px; width: 520px; max-width: 96vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 16px 50px rgba(0,0,0,0.22); transform: scale(0.95); transition: transform 0.2s; }
+.modal-overlay.open .modal { transform: scale(1); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; }
+.modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-main); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-mid); cursor: pointer; border: none; transition: 0.18s; }
+.modal-close:hover { background: var(--border); }
+.modal-body { overflow-y: auto; padding: 22px 24px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+.modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* ── FORM ── */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.9px; color: var(--text-mid); }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13.5px; color: var(--text-dark); background: var(--bg-main); transition: 0.18s; font-family: inherit; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(200,169,110,0.12); background: var(--bg-card); }
+.form-textarea { resize: vertical; min-height: 70px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-hint { font-size: 11.5px; color: var(--text-light); }
+
+/* ── PAGINATION ── */
+.pagination { display: flex; gap: 6px; align-items: center; justify-content: center; padding: 16px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.page-btn { width: 36px; height: 36px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-mid); transition: 0.16s; font-family: inherit; }
+.page-btn.active { background: #1A1A1A; color: #C8A96E; border-color: #1A1A1A; }
+.page-btn:hover:not(.active):not(:disabled) { border-color: var(--accent); color: var(--text-dark); }
+.page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.page-info { font-size: 12.5px; color: var(--text-light); padding: 0 8px; }
+
+/* ── CUSTOMER DETAIL MODAL ── */
+.detail-section { background: var(--bg-main); border-radius: 12px; padding: 14px 16px; }
+.detail-section-title { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.9px; color: var(--text-light); margin-bottom: 10px; }
+.detail-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 13px; border-bottom: 1px solid var(--border); }
+.detail-row:last-child { border-bottom: none; }
+.detail-label { color: var(--text-light); }
+.detail-value { font-weight: 600; text-align: right; }
+.detail-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 4px; }
+.detail-stat-box { background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 12px; padding: 12px; text-align: center; }
+.detail-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--accent); display: block; line-height: 1; }
+.detail-stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-light); display: block; margin-top: 3px; }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 64px 24px; color: var(--text-light); }
+.empty-icon { font-size: 48px; margin-bottom: 14px; }
+.empty-state h3 { font-size: 17px; font-weight: 700; color: var(--text-mid); margin-bottom: 6px; }
+.empty-state p { font-size: 13.5px; }
+
+/* ── SORT BAR ── */
+.sort-bar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.sort-chip { padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg-main); color: var(--text-mid); transition: 0.16s; font-family: inherit; }
+.sort-chip.active { background: #1A1A1A; color: #C8A96E; border-color: #1A1A1A; }
+.sort-chip:hover:not(.active) { border-color: var(--accent); color: var(--text-dark); }
+
+/* ── SKELETON ── */
+.skel { background: linear-gradient(90deg,var(--border) 25%,rgba(232,223,208,0.4) 50%,var(--border) 75%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; border-radius: 8px; }
+@keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+
+/* ── TOAST ── */
+.toast-wrap { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 10px 16px; border-radius: 10px; background: #1A1A1A; color: #fff; font-size: 13px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; }
+.toast.success { border-left: 3px solid #4CAF7D; }
+.toast.error   { border-left: 3px solid #EF4444; }
+@keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) { .kpi-strip { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) {
+  .customer-grid { grid-template-columns: 1fr; padding: 14px; }
+  .form-row { grid-template-columns: 1fr; }
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .page-body { padding: 14px; }
+  .filter-bar { padding: 10px 14px; }
+}
+  /* ══════════════════════════════════════════════════════
+     DARK MODE — Complete coverage
+     ══════════════════════════════════════════════════════ */
+  html[data-theme="dark"] {
+    --bg-main:   #0F0F0F;
+    --bg-card:   #181818;
+    --bg-panel:  #181818;
+    --border:    rgba(255,255,255,0.08);
+    --text-dark: #F0EBE0;
+    --text-mid:  #A09080;
+    --text-light:#5A5046;
+    --accent:    #C8A96E;
+    --primary:   #1A1A1A;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  html[data-theme="dark"] body { background: #0F0F0F; color: #F0EBE0; }
+
+  /* Layout */
+  html[data-theme="dark"] .app-shell { background: #0F0F0F; }
+  html[data-theme="dark"] .main-content { background: #0F0F0F; }
+
+  /* Header */
+  html[data-theme="dark"] .top-header { background: #111 !important; border-color: rgba(255,255,255,0.07) !important; }
+  html[data-theme="dark"] .top-header h1 { color: #F0EBE0 !important; }
+
+  /* Cards & Panels */
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-label { color: #5A5046; }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-value { color: #F0EBE0; }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-sub { color: #5A5046; }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-footer { color: #5A5046; }
+  html[data-theme="dark"] .chart-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .panel { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .section-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .stat-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+
+  /* Section titles */
+  html[data-theme="dark"] .section-title { color: #F0EBE0; }
+  html[data-theme="dark"] .section-subtitle { color: #5A5046; }
+  html[data-theme="dark"] .panel-title { color: #F0EBE0; }
+  html[data-theme="dark"] .panel-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .panel-badge { background: #222; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .section-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .section-sub { color: #5A5046; }
+  html[data-theme="dark"] .stat-label { color: #5A5046; }
+  html[data-theme="dark"] .stat-value { color: #C8A96E; }
+  html[data-theme="dark"] .stat-sub { color: #5A5046; }
+
+  /* Charts — axis labels & gridlines */
+  html[data-theme="dark"] .chart-card .section-title { color: #F0EBE0; }
+  html[data-theme="dark"] .legend-item { color: #A09080; }
+  html[data-theme="dark"] .donut-center-val { color: #F0EBE0; }
+  html[data-theme="dark"] .donut-center-lbl { color: #5A5046; }
+  html[data-theme="dark"] .donut-leg-item { color: #A09080; }
+  html[data-theme="dark"] .cat-icon-wrap { background: #222; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .cat-name { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-revenue { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-bar-wrap { background: rgba(255,255,255,0.06); }
+
+  /* Tables */
+  html[data-theme="dark"] .orders-table th,
+  html[data-theme="dark"] .inv-table th { background: #111; color: #5A5046; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .orders-table td,
+  html[data-theme="dark"] .inv-table td { color: #F0EBE0; border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .orders-table tr:hover td,
+  html[data-theme="dark"] .inv-table tr:hover td { background: rgba(255,255,255,0.03); }
+  html[data-theme="dark"] .inv-table-wrap { background: #181818; }
+  html[data-theme="dark"] .item-name { color: #F0EBE0; }
+  html[data-theme="dark"] .item-cat  { color: #5A5046; }
+  html[data-theme="dark"] .price-cell { color: #F0EBE0; }
+  html[data-theme="dark"] .stock-bar-wrap { background: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .action-btn { background: #222; border-color: rgba(255,255,255,0.1); color: #A09080; }
+  html[data-theme="dark"] .action-btn:hover { border-color: #C8A96E; color: #C8A96E; background: rgba(200,169,110,0.08); }
+
+  /* Search & filters */
+  html[data-theme="dark"] .search-wrap { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .search-wrap input { color: #F0EBE0; }
+  html[data-theme="dark"] .search-box { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .search-box input { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-select,
+  html[data-theme="dark"] .cat-filter,
+  html[data-theme="dark"] .form-select { background: #181818; border-color: rgba(255,255,255,0.08); color: #F0EBE0; }
+  html[data-theme="dark"] .filter-bar { background: #111; border-color: rgba(255,255,255,0.07); }
+  html[data-theme="dark"] .period-tab { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .period-tab:hover:not(.active) { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .sort-chip { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .sort-chip:hover:not(.active) { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .period-tabs { background: #181818; border-color: rgba(255,255,255,0.08); }
+
+  /* Buttons */
+  html[data-theme="dark"] .btn-ghost { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .btn-ghost:hover { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .btn-outline { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .btn-outline:hover { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .refresh-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .refresh-btn:hover { border-color: #C8A96E; color: #C8A96E; }
+  html[data-theme="dark"] .icon-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .export-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #C8A96E; }
+  html[data-theme="dark"] .page-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .page-btn:hover:not(.active):not(:disabled) { border-color: #C8A96E; color: #F0EBE0; }
+
+  /* Modals */
+  html[data-theme="dark"] .modal,
+  html[data-theme="dark"] .m-box { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-head,
+  html[data-theme="dark"] .m-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-foot,
+  html[data-theme="dark"] .m-footer { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-title,
+  html[data-theme="dark"] .m-title { color: #F0EBE0; }
+  html[data-theme="dark"] .modal-close,
+  html[data-theme="dark"] .m-close { background: #222; color: #A09080; }
+  html[data-theme="dark"] .modal-close:hover,
+  html[data-theme="dark"] .m-close:hover { background: #2a2a2a; }
+  html[data-theme="dark"] .form-input,
+  html[data-theme="dark"] .modal-input,
+  html[data-theme="dark"] .form-textarea,
+  html[data-theme="dark"] .form-select { background: #111; border-color: rgba(255,255,255,0.1); color: #F0EBE0; }
+  html[data-theme="dark"] .form-label,
+  html[data-theme="dark"] .modal-label,
+  html[data-theme="dark"] .form-label { color: #A09080; }
+  html[data-theme="dark"] .form-hint { color: #5A5046; }
+  html[data-theme="dark"] .form-input:focus,
+  html[data-theme="dark"] .modal-input:focus,
+  html[data-theme="dark"] .form-textarea:focus { border-color: #C8A96E; background: #181818; }
+
+  /* Customer directory */
+  html[data-theme="dark"] .customer-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .customer-name { color: #F0EBE0; }
+  html[data-theme="dark"] .customer-phone { color: #5A5046; }
+  html[data-theme="dark"] .customer-stat { background: #111; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .customer-stat-lbl { color: #5A5046; }
+  html[data-theme="dark"] .loyalty-bar-wrap { background: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .tier-platinum { background: rgba(99,102,241,0.2); color: #818CF8; border-color: rgba(99,102,241,0.4); }
+  html[data-theme="dark"] .tier-gold { background: rgba(200,169,110,0.2); color: #C8A96E; border-color: rgba(200,169,110,0.4); }
+  html[data-theme="dark"] .tier-silver { background: rgba(200,200,200,0.15); color: #C0C0C0; border-color: rgba(200,200,200,0.3); }
+  html[data-theme="dark"] .tier-bronze { background: rgba(205,127,50,0.2); color: #CD7F32; border-color: rgba(205,127,50,0.4); }
+  html[data-theme="dark"] .detail-section { background: #111; }
+  html[data-theme="dark"] .detail-section-title { color: #5A5046; }
+  html[data-theme="dark"] .detail-row { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .detail-label { color: #5A5046; }
+  html[data-theme="dark"] .detail-value { color: #F0EBE0; }
+  html[data-theme="dark"] .detail-stat-box { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .detail-stat-lbl { color: #5A5046; }
+
+  /* Inventory */
+  html[data-theme="dark"] .cat-icon-box { background: #222; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .cat-info .cat-name { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-items-count { color: #5A5046; }
+  html[data-theme="dark"] .cat-val { color: #F0EBE0; }
+  html[data-theme="dark"] .alert-item { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .alert-name { color: #F0EBE0; }
+  html[data-theme="dark"] .alert-detail { color: #5A5046; }
+  html[data-theme="dark"] .no-alerts { color: #5A5046; }
+  html[data-theme="dark"] .item-emoji { background: #222; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal { background: #181818; }
+  html[data-theme="dark"] .modal-title { color: #F0EBE0; }
+  html[data-theme="dark"] .modal-cancel { background: #222; border-color: rgba(255,255,255,0.1); color: #A09080; }
+  html[data-theme="dark"] .modal-input { background: #111; border-color: rgba(255,255,255,0.1); color: #F0EBE0; }
+
+  /* Orders page */
+  html[data-theme="dark"] .status-tab { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .status-tab.active { background: #1A1A1A; color: #C8A96E; }
+  html[data-theme="dark"] .strip-label { color: #5A5046; }
+  html[data-theme="dark"] .strip-value { color: #F0EBE0; }
+  html[data-theme="dark"] .strip-sub { color: #5A5046; }
+  html[data-theme="dark"] .panel-count { color: #5A5046; }
+  html[data-theme="dark"] .order-id { color: #F0EBE0; }
+  html[data-theme="dark"] .o-modal-body { background: #181818; }
+  html[data-theme="dark"] .detail-label { color: #5A5046; }
+  html[data-theme="dark"] .detail-value { color: #F0EBE0; }
+  html[data-theme="dark"] .totals-block { background: #111; }
+  html[data-theme="dark"] .item-qty { background: #222; border-color: rgba(255,255,255,0.08); color: #F0EBE0; }
+  html[data-theme="dark"] .o-modal-close { background: #222; color: #A09080; }
+
+  /* Sales report */
+  html[data-theme="dark"] .summary-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .summary-card .card-label { color: #5A5046; }
+  html[data-theme="dark"] .summary-card .card-value { color: #C8A96E; }
+  html[data-theme="dark"] .summary-card .card-sub { color: #5A5046; }
+  html[data-theme="dark"] .report-grid .panel { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .bar-label { color: #5A5046; }
+  html[data-theme="dark"] .bar-val { color: #A09080; }
+  html[data-theme="dark"] .item-name { color: #F0EBE0; }
+  html[data-theme="dark"] .item-cat { color: #5A5046; }
+  html[data-theme="dark"] .item-qty { color: #5A5046; }
+  html[data-theme="dark"] .item-rev { color: #C8A96E; }
+  html[data-theme="dark"] .cat-amt { color: #A09080; }
+  html[data-theme="dark"] .date-field { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .date-field input[type="date"] { color: #F0EBE0; background: transparent; }
+
+  /* Shift & Cash log */
+  html[data-theme="dark"] .tab-bar { background: #111; border-color: rgba(255,255,255,0.07); }
+  html[data-theme="dark"] .tab-btn { color: #5A5046; }
+  html[data-theme="dark"] .tab-btn.active { color: #F0EBE0; background: #181818; border-color: rgba(255,255,255,0.08) rgba(255,255,255,0.08) #0F0F0F; }
+  html[data-theme="dark"] .shift-banner { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .shift-banner-title { color: #F0EBE0; }
+  html[data-theme="dark"] .shift-banner-meta { color: #5A5046; }
+  html[data-theme="dark"] .cash-log-row { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .cash-log-type { color: #A09080; }
+  html[data-theme="dark"] .cash-log-desc { color: #5A5046; }
+  html[data-theme="dark"] .cash-log-amt { color: #F0EBE0; }
+  html[data-theme="dark"] .shift-row { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .shift-id { color: #F0EBE0; }
+  html[data-theme="dark"] .shift-cashier { color: #A09080; }
+  html[data-theme="dark"] .shift-date { color: #5A5046; }
+  html[data-theme="dark"] .variance-pos { color: #4CAF7D; }
+  html[data-theme="dark"] .variance-neg { color: #EF4444; }
+
+  /* Menu management */
+  html[data-theme="dark"] .menu-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .menu-card-top { background: #222; }
+  html[data-theme="dark"] .menu-card-cat { color: #C8A96E; }
+  html[data-theme="dark"] .menu-card-name { color: #F0EBE0; }
+  html[data-theme="dark"] .menu-card-desc { color: #5A5046; }
+  html[data-theme="dark"] .menu-card-price { color: #F0EBE0; }
+  html[data-theme="dark"] .card-btn { background: #222; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .card-btn:hover { border-color: #C8A96E; background: rgba(200,169,110,0.1); }
+  html[data-theme="dark"] .cat-table th { background: #111; color: #5A5046; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .cat-table td { border-color: rgba(255,255,255,0.05); color: #F0EBE0; }
+  html[data-theme="dark"] .cat-table tr:hover td { background: rgba(255,255,255,0.03); }
+  html[data-theme="dark"] .view-tab { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .view-tab.active { background: #1A1A1A; color: #C8A96E; }
+  html[data-theme="dark"] .img-upload-drop { background: #111; border-color: rgba(255,255,255,0.1); }
+  html[data-theme="dark"] .img-upload-drop:hover { border-color: #C8A96E; background: rgba(200,169,110,0.04); }
+  html[data-theme="dark"] .toggle-label { color: #F0EBE0; }
+  html[data-theme="dark"] .toggle-sub { color: #5A5046; }
+  html[data-theme="dark"] .toggle-slider { background: rgba(255,255,255,0.1); }
+
+  /* Scrollbars in dark mode */
+  html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+  html[data-theme="dark"] ::-webkit-scrollbar-track { background: transparent; }
+
+  /* Skeleton shimmer in dark mode */
+  html[data-theme="dark"] .skel,
+  html[data-theme="dark"] .skeleton { background: linear-gradient(90deg,#1e1e1e 25%,#2a2a2a 50%,#1e1e1e 75%); background-size:400% 100%; }
+
+
+  html[data-theme="dark"] body { background: #0F0F0F; color: #F0EBE0; }
+  html[data-theme="dark"] .top-header { background: #111 !important; border-color: rgba(255,255,255,0.07) !important; }
+  html[data-theme="dark"] .top-header h1 { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .page-body { background: #0F0F0F; }
+  html[data-theme="dark"] .filter-bar { background: #111 !important; border-color: rgba(255,255,255,0.07) !important; }
+  html[data-theme="dark"] .kpi-card { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .kpi-label { color: #5A5046 !important; }
+  html[data-theme="dark"] .kpi-value { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .kpi-sub { color: #5A5046 !important; }
+  html[data-theme="dark"] .customer-card { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .customer-card:hover { border-color: rgba(200,169,110,0.4) !important; }
+  html[data-theme="dark"] .customer-avatar { background: #2a2a2a !important; border-color: rgba(255,255,255,0.1) !important; color: #C8A96E !important; }
+  html[data-theme="dark"] .customer-name { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .customer-phone,
+  html[data-theme="dark"] .customer-email { color: #5A5046 !important; }
+  html[data-theme="dark"] .customer-stat { background: #111 !important; border-color: rgba(255,255,255,0.06) !important; }
+  html[data-theme="dark"] .customer-stat-lbl { color: #5A5046 !important; }
+  html[data-theme="dark"] .customer-stat-val { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .loyalty-bar-wrap { background: rgba(255,255,255,0.06) !important; }
+  html[data-theme="dark"] .tier-badge { border: 1.5px solid; }
+  html[data-theme="dark"] .tier-platinum { background: rgba(99,102,241,0.18) !important; color: #818CF8 !important; border-color: rgba(99,102,241,0.35) !important; }
+  html[data-theme="dark"] .tier-gold { background: rgba(200,169,110,0.18) !important; color: #C8A96E !important; border-color: rgba(200,169,110,0.35) !important; }
+  html[data-theme="dark"] .tier-silver { background: rgba(180,180,180,0.15) !important; color: #C0C0C0 !important; border-color: rgba(180,180,180,0.3) !important; }
+  html[data-theme="dark"] .tier-bronze { background: rgba(205,127,50,0.18) !important; color: #CD9A5A !important; border-color: rgba(205,127,50,0.35) !important; }
+  html[data-theme="dark"] .card-actions .card-btn { background: #222 !important; border-color: rgba(255,255,255,0.08) !important; color: #A09080 !important; }
+  html[data-theme="dark"] .card-actions .card-btn:hover { border-color: #C8A96E !important; color: #C8A96E !important; }
+  html[data-theme="dark"] .search-box { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .search-box input { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .sort-chip { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; color: #5A5046 !important; }
+  html[data-theme="dark"] .sort-chip.active { background: #1A1A1A !important; color: #C8A96E !important; border-color: #C8A96E !important; }
+  html[data-theme="dark"] .icon-btn { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; color: #A09080 !important; }
+  html[data-theme="dark"] .m-box { background: #181818 !important; border-color: rgba(255,255,255,0.1) !important; }
+  html[data-theme="dark"] .m-head { border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .m-title { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .m-close { background: #222 !important; color: #A09080 !important; }
+  html[data-theme="dark"] .m-footer { border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .form-label { color: #A09080 !important; }
+  html[data-theme="dark"] .form-input,
+  html[data-theme="dark"] .form-textarea,
+  html[data-theme="dark"] .form-select { background: #111 !important; border-color: rgba(255,255,255,0.1) !important; color: #F0EBE0 !important; }
+  html[data-theme="dark"] .form-hint { color: #5A5046 !important; }
+  html[data-theme="dark"] .detail-section { background: #111 !important; border-radius: 10px; }
+  html[data-theme="dark"] .detail-section-title { color: #5A5046 !important; }
+  html[data-theme="dark"] .detail-row { border-color: rgba(255,255,255,0.05) !important; }
+  html[data-theme="dark"] .detail-label { color: #5A5046 !important; }
+  html[data-theme="dark"] .detail-value { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .detail-stat-box { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .detail-stat-lbl { color: #5A5046 !important; }
+  html[data-theme="dark"] .detail-stat-val { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .drawer-panel { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .page-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .page-btn.active { background: #C8A96E; border-color: #C8A96E; color: #fff; }
+  html[data-theme="dark"] .empty-state { color: #5A5046; }
+  html[data-theme="dark"] .empty-state p { color: #5A5046; }
+</style>
+</head>
+<body>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<button id="sidebarToggle" onclick="toggleSidebarNav()" aria-label="Toggle menu">
+  <span></span><span></span><span></span>
+</button>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main-content">
+    <!-- HEADER -->
+    <header class="top-header">
+      <h1>👥 CUSTOMER DIRECTORY</h1>
+      <div class="header-spacer"></div>
+      <button class="btn btn-ghost btn-sm" onclick="importFromOrders()" id="importBtn" title="Import all unique customer names from past orders">⬇ Import from Orders</button>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Add Customer</button>
+    </header>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search name, phone, email…" oninput="handleSearch()">
+      </div>
+      <div class="sort-bar">
+        <button class="sort-chip active" onclick="setSort('name','ASC',this)">A–Z</button>
+        <button class="sort-chip" onclick="setSort('total_spent','DESC',this)">Top Spenders</button>
+        <button class="sort-chip" onclick="setSort('visit_count','DESC',this)">Most Visits</button>
+        <button class="sort-chip" onclick="setSort('loyalty_pts','DESC',this)">Most Points</button>
+        <button class="sort-chip" onclick="setSort('last_visit','DESC',this)">Recent</button>
+      </div>
+      <div class="header-spacer"></div>
+      <span id="totalCount" style="font-size:12.5px;color:var(--text-light);white-space:nowrap"></span>
+    </div>
+
+    <!-- PAGE BODY -->
+    <div class="page-body" id="pageBody">
+
+      <!-- KPI Strip -->
+      <div class="kpi-strip" id="kpiStrip">
+        <div class="kpi-card skel" style="height:96px"></div>
+        <div class="kpi-card skel" style="height:96px"></div>
+        <div class="kpi-card skel" style="height:96px"></div>
+        <div class="kpi-card skel" style="height:96px"></div>
+      </div>
+
+      <!-- Customer Grid Card -->
+      <div class="section-card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">ALL CUSTOMERS</div>
+            <div class="section-sub" id="gridSubtitle">Loading customers…</div>
+          </div>
+          <div class="section-actions">
+            <select class="form-select" style="width:auto;padding:7px 12px;font-size:12px" id="tierFilter" onchange="loadCustomers()">
+              <option value="">All Tiers</option>
+              <option value="bronze">Bronze</option>
+              <option value="silver">Silver</option>
+              <option value="gold">Gold</option>
+              <option value="platinum">Platinum</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Grid -->
+        <div class="customer-grid" id="customerGrid">
+          ${[...Array(6)].map(() => '<div class="skel" style="height:180px;border-radius:16px"></div>').join('')}
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="paginationWrap" style="display:none"></div>
+      </div>
+
+    </div><!-- /page-body -->
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: ADD / EDIT CUSTOMER ═══════════ -->
+<div class="modal-overlay" id="customerFormModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="formModalTitle">➕ Add New Customer</div>
+      <button class="modal-close" onclick="closeModal('customerFormModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit_id">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input type="text" class="form-input" id="cf_name" placeholder="Customer's full name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-input" id="cf_phone" placeholder="09XX-XXX-XXXX">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="cf_email" placeholder="email@example.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input type="text" class="form-input" id="cf_address" placeholder="Street, Barangay, City">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Birthday</label>
+          <input type="date" class="form-input" id="cf_birthday">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="cf_active">
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="cf_notes" placeholder="Preferences, allergies, special requests…"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('customerFormModal')">Cancel</button>
+      <button class="btn btn-primary" id="formSaveBtn" onclick="saveCustomer()">Save Customer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: CUSTOMER DETAIL ═══════════ -->
+<div class="modal-overlay" id="customerDetailModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-head">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="detailAvatar" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#C8A96E,#D4BC8A);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:19px;color:#1A1A1A;flex-shrink:0"></div>
+        <div>
+          <div class="modal-title" id="detailName">Customer</div>
+          <div id="detailBadge" style="margin-top:3px"></div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('customerDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody" style="gap:14px">
+      <p style="color:var(--text-light)">Loading…</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="detailDeleteBtn">🗑 Delete</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-success btn-sm" id="detailPointsBtn">⭐ Add Points</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('customerDetailModal')">Close</button>
+      <button class="btn btn-primary btn-sm" id="detailEditBtn">✏ Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: ADD POINTS ═══════════ -->
+<div class="modal-overlay" id="pointsModal">
+  <div class="modal" style="width:380px">
+    <div class="modal-head">
+      <div class="modal-title">⭐ Add Loyalty Points</div>
+      <button class="modal-close" onclick="closeModal('pointsModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-mid)">Manually add points to <strong id="ptsCustName">this customer</strong>.</p>
+      <div class="form-group">
+        <label class="form-label">Points to Add</label>
+        <input type="number" class="form-input" id="pts_amount" placeholder="e.g. 10" min="1" step="1">
+        <span class="form-hint">1 point = ₱50 spent (auto-earned on each order)</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason</label>
+        <input type="text" class="form-input" id="pts_reason" placeholder="e.g. Birthday bonus, promotion…">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('pointsModal')">Cancel</button>
+      <button class="btn btn-success" onclick="doAddPoints()">Add Points</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: DELETE CONFIRM ═══════════ -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="width:380px">
+    <div class="modal-head">
+      <div class="modal-title">🗑 Delete Customer</div>
+      <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;color:var(--text-mid)">Are you sure you want to permanently delete <strong id="delCustName">this customer</strong>? This action cannot be undone.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="doDelete()">Delete Permanently</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/auth-check.js"></script>
+<script>
+const _user = requireLogin(['admin','cashier']);
+if (_user) buildNav('customers', _user);
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   CUSTOMER DIRECTORY — FRONTEND LOGIC
+   ══════════════════════════════════════════════════════════════ */
+
+const API = './php/customers.php';
+let currentPage = 0;
+const PAGE_SIZE  = 18;
+let sortField    = 'name';
+let sortDir      = 'ASC';
+let searchTimer  = null;
+let activeDetailId = null;
+
+// ── INIT ──────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  loadKPIs();
+  loadCustomers();
+});
+
+// ── API HELPER ────────────────────────────────────────────────────
+async function api(action, method = 'GET', body = null, extra = '') {
+  try {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res  = await fetch(`${API}?action=${action}${extra}`, opts);
+    const data = await res.json();
+    if (data && data.error) { toast(data.error, 'error'); return null; }
+    return data;
+  } catch(e) {
+    toast('Server unreachable — check PHP backend', 'error');
+    return null;
+  }
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const wrap = document.getElementById('toastWrap');
+  const el   = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = (type === 'success' ? '✓ ' : '⚠ ') + msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ── FORMATTERS ────────────────────────────────────────────────────
+function php(n) { return '₱' + parseFloat(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 }); }
+function fmtDate(str) {
+  if (!str || str === '0000-00-00') return '—';
+  return new Date(str).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+function fmtDT(str) {
+  if (!str) return '—';
+  return new Date(str).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function initials(name) {
+  return (name || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
+function getTier(pts) {
+  if (pts >= 500) return { label: '💎 Platinum', cls: 'tier-platinum' };
+  if (pts >= 200) return { label: '🥇 Gold',     cls: 'tier-gold' };
+  if (pts >= 50)  return { label: '🥈 Silver',   cls: 'tier-silver' };
+  return                  { label: '🥉 Bronze',  cls: 'tier-bronze' };
+}
+
+// ── KPIs ──────────────────────────────────────────────────────────
+async function loadKPIs() {
+  const data = await api('summary');
+  const strip = document.getElementById('kpiStrip');
+  if (!data) {
+    strip.innerHTML = `<div class="kpi-card"><div class="kpi-label">Customers</div><div class="kpi-value">—</div></div>`.repeat(4);
+    return;
+  }
+  strip.innerHTML = `
+    <div class="kpi-card dark">
+      <span class="kpi-icon">👥</span>
+      <div class="kpi-label">Total Customers</div>
+      <div class="kpi-value">${parseInt(data.total_customers) || 0}</div>
+      <div class="kpi-sub">${parseInt(data.active_customers) || 0} active</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">💰</span>
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value">${php(data.total_revenue).replace('₱','₱').slice(0, 9)}</div>
+      <div class="kpi-sub">Across all customers</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">⭐</span>
+      <div class="kpi-label">Loyalty Points</div>
+      <div class="kpi-value">${parseInt(data.total_pts) || 0}</div>
+      <div class="kpi-sub">Total outstanding</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">🕐</span>
+      <div class="kpi-label">Recent Visitors</div>
+      <div class="kpi-value">${parseInt(data.recent_visitors) || 0}</div>
+      <div class="kpi-sub">Last 30 days</div>
+    </div>
+  `;
+}
+
+// ── LOAD CUSTOMERS ────────────────────────────────────────────────
+async function loadCustomers() {
+  const q = document.getElementById('searchInput').value.trim();
+  document.getElementById('customerGrid').innerHTML = Array(6).fill('<div class="skel" style="height:180px;border-radius:16px"></div>').join('');
+
+  let data;
+  if (q.length >= 2) {
+    data = await api('search', 'GET', null, `&q=${encodeURIComponent(q)}`);
+    if (data) {
+      renderGrid(data);
+      document.getElementById('gridSubtitle').textContent = `${data.length} result${data.length !== 1 ? 's' : ''} for "${q}"`;
+      document.getElementById('paginationWrap').style.display = 'none';
+    }
+    return;
+  }
+
+  const offset = currentPage * PAGE_SIZE;
+  data = await api('list', 'GET', null, `&limit=${PAGE_SIZE}&offset=${offset}&sort=${sortField}&dir=${sortDir}`);
+  if (!data) return;
+
+  renderGrid(data.customers || []);
+  const total = parseInt(data.total) || 0;
+  document.getElementById('gridSubtitle').textContent = `${total} customer${total !== 1 ? 's' : ''}`;
+  document.getElementById('totalCount').textContent = `Showing ${Math.min(offset + 1, total)}–${Math.min(offset + PAGE_SIZE, total)} of ${total}`;
+  renderPagination(total);
+}
+
+function renderGrid(customers) {
+  const grid = document.getElementById('customerGrid');
+  if (!customers.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1"><div class="empty-state"><div class="empty-icon">👤</div><h3>No Customers Found</h3><p>Add your first customer to get started.</p><button class="btn btn-primary" onclick="openAddModal()" style="margin-top:16px">+ Add Customer</button></div></div>`;
+    return;
+  }
+
+  grid.innerHTML = customers.map(c => {
+    const tier   = getTier(parseInt(c.loyalty_pts) || 0);
+    const maxPts = tier.label.includes('Platinum') ? 1000 : tier.label.includes('Gold') ? 500 : tier.label.includes('Silver') ? 200 : 100;
+    const pct    = Math.min(100, Math.round(((parseInt(c.loyalty_pts) || 0) / maxPts) * 100));
+    return `
+      <div class="customer-card" onclick="viewDetail(${c.id})">
+        <span class="tier-badge ${tier.cls}">${tier.label}</span>
+        <div class="customer-card-head">
+          <div class="customer-avatar">${initials(c.name)}</div>
+          <div>
+            <div class="customer-name">${c.name}</div>
+            <div class="customer-phone">${c.phone || c.email || 'No contact info'}</div>
+          </div>
+        </div>
+        <div class="customer-stat-row">
+          <div class="customer-stat">
+            <span class="customer-stat-val">${parseInt(c.visit_count) || 0}</span>
+            <span class="customer-stat-lbl">Visits</span>
+          </div>
+          <div class="customer-stat">
+            <span class="customer-stat-val">${formatCompact(c.total_spent)}</span>
+            <span class="customer-stat-lbl">Spent</span>
+          </div>
+          <div class="customer-stat">
+            <span class="customer-stat-val">${parseInt(c.loyalty_pts) || 0}</span>
+            <span class="customer-stat-lbl">Points</span>
+          </div>
+        </div>
+        <div class="customer-card-foot">
+          <span class="loyalty-pts">⭐ ${parseInt(c.loyalty_pts) || 0} pts</span>
+          <div class="loyalty-bar-wrap" style="margin:0 8px">
+            <div class="loyalty-bar" style="width:${pct}%"></div>
+          </div>
+          <span style="font-size:11px;color:var(--text-light)">${c.last_visit ? fmtDate(c.last_visit) : 'No visits yet'}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function formatCompact(n) {
+  n = parseFloat(n) || 0;
+  if (n >= 1000) return '₱' + (n / 1000).toFixed(1) + 'K';
+  return '₱' + n.toFixed(0);
+}
+
+// ── PAGINATION ────────────────────────────────────────────────────
+function renderPagination(total) {
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const wrap  = document.getElementById('paginationWrap');
+  if (pages <= 1) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'flex';
+  const html = [];
+  html.push(`<button class="page-btn" onclick="gotoPage(${currentPage-1})" ${currentPage===0?'disabled':''}>‹</button>`);
+  for (let i = 0; i < pages; i++) {
+    if (pages > 7 && Math.abs(i - currentPage) > 2 && i !== 0 && i !== pages-1) {
+      if (i === 1 || i === pages-2) html.push('<span style="color:var(--text-light);padding:0 4px">…</span>');
+      continue;
+    }
+    html.push(`<button class="page-btn ${i===currentPage?'active':''}" onclick="gotoPage(${i})">${i+1}</button>`);
+  }
+  html.push(`<button class="page-btn" onclick="gotoPage(${currentPage+1})" ${currentPage>=pages-1?'disabled':''}>›</button>`);
+  wrap.innerHTML = html.join('');
+}
+
+function gotoPage(p) { currentPage = p; loadCustomers(); }
+
+// ── SORT ──────────────────────────────────────────────────────────
+function setSort(field, dir, btn) {
+  sortField = field; sortDir = dir; currentPage = 0;
+  document.querySelectorAll('.sort-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadCustomers();
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────
+function handleSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { currentPage = 0; loadCustomers(); }, 300);
+}
+
+// ── VIEW DETAIL ───────────────────────────────────────────────────
+async function viewDetail(id) {
+  activeDetailId = id;
+  openModal('customerDetailModal');
+  const c = await api('get', 'GET', null, `&id=${id}`);
+  if (!c) return;
+
+  document.getElementById('detailAvatar').textContent = initials(c.name);
+  document.getElementById('detailName').textContent   = c.name;
+  const tier = getTier(parseInt(c.loyalty_pts) || 0);
+  document.getElementById('detailBadge').innerHTML = `<span class="tier-badge ${tier.cls}" style="position:static">${tier.label}</span>`;
+
+  document.getElementById('detailEditBtn').onclick   = () => { closeModal('customerDetailModal'); openEditModal(c); };
+  document.getElementById('detailDeleteBtn').onclick = () => { closeModal('customerDetailModal'); confirmDelete(c); };
+  document.getElementById('detailPointsBtn').onclick = () => { closeModal('customerDetailModal'); openPointsModal(c); };
+
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-stats">
+      <div class="detail-stat-box">
+        <span class="detail-stat-val">${parseInt(c.visit_count) || 0}</span>
+        <span class="detail-stat-lbl">Visits</span>
+      </div>
+      <div class="detail-stat-box">
+        <span class="detail-stat-val">${formatCompact(c.total_spent)}</span>
+        <span class="detail-stat-lbl">Total Spent</span>
+      </div>
+      <div class="detail-stat-box">
+        <span class="detail-stat-val" style="color:#C8A96E">${parseInt(c.loyalty_pts) || 0}</span>
+        <span class="detail-stat-lbl">Points</span>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Contact Info</div>
+      <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${c.phone || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${c.email || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${c.address || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Birthday</span><span class="detail-value">${fmtDate(c.birthday)}</span></div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Activity</div>
+      <div class="detail-row"><span class="detail-label">Last Visit</span><span class="detail-value">${fmtDT(c.last_visit)}</span></div>
+      <div class="detail-row"><span class="detail-label">Avg per Visit</span><span class="detail-value">${c.visit_count > 0 ? php(c.total_spent / c.visit_count) : '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Member Since</span><span class="detail-value">${fmtDate(c.created_at)}</span></div>
+      <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${parseInt(c.is_active) ? '✅ Active' : '⛔ Inactive'}</span></div>
+    </div>
+    ${c.notes ? `<div class="detail-section"><div class="detail-section-title">Notes</div><p style="font-size:13px;color:var(--text-mid);padding-top:4px">${c.notes}</p></div>` : ''}
+  `;
+}
+
+// ── ADD / EDIT MODAL ──────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('edit_id').value    = '';
+  document.getElementById('cf_name').value    = '';
+  document.getElementById('cf_phone').value   = '';
+  document.getElementById('cf_email').value   = '';
+  document.getElementById('cf_address').value = '';
+  document.getElementById('cf_birthday').value= '';
+  document.getElementById('cf_active').value  = '1';
+  document.getElementById('cf_notes').value   = '';
+  document.getElementById('formModalTitle').textContent = '➕ Add New Customer';
+  document.getElementById('formSaveBtn').textContent    = 'Save Customer';
+  openModal('customerFormModal');
+}
+
+function openEditModal(c) {
+  document.getElementById('edit_id').value    = c.id;
+  document.getElementById('cf_name').value    = c.name    || '';
+  document.getElementById('cf_phone').value   = c.phone   || '';
+  document.getElementById('cf_email').value   = c.email   || '';
+  document.getElementById('cf_address').value = c.address || '';
+  document.getElementById('cf_birthday').value= c.birthday && c.birthday !== '0000-00-00' ? c.birthday : '';
+  document.getElementById('cf_active').value  = c.is_active ? '1' : '0';
+  document.getElementById('cf_notes').value   = c.notes   || '';
+  document.getElementById('formModalTitle').textContent = `✏ Edit — ${c.name}`;
+  document.getElementById('formSaveBtn').textContent    = 'Update Customer';
+  openModal('customerFormModal');
+}
+
+async function saveCustomer() {
+  const id    = document.getElementById('edit_id').value;
+  const name  = document.getElementById('cf_name').value.trim();
+  if (!name) { toast('Customer name is required', 'error'); return; }
+  const payload = {
+    id:        id ? parseInt(id) : undefined,
+    name,
+    phone:     document.getElementById('cf_phone').value.trim(),
+    email:     document.getElementById('cf_email').value.trim(),
+    address:   document.getElementById('cf_address').value.trim(),
+    birthday:  document.getElementById('cf_birthday').value,
+    is_active: parseInt(document.getElementById('cf_active').value),
+    notes:     document.getElementById('cf_notes').value.trim(),
+  };
+  const action = id ? 'update' : 'create';
+  const res = await api(action, 'POST', payload);
+  if (res?.success) {
+    toast(id ? 'Customer updated!' : 'Customer added!');
+    closeModal('customerFormModal');
+    currentPage = 0;
+    loadCustomers();
+    loadKPIs();
+  }
+}
+
+// ── DELETE ────────────────────────────────────────────────────────
+let deleteTarget = null;
+function confirmDelete(c) {
+  deleteTarget = c;
+  document.getElementById('delCustName').textContent = c.name;
+  openModal('deleteModal');
+}
+async function doDelete() {
+  if (!deleteTarget) return;
+  const res = await api('delete', 'POST', { id: deleteTarget.id });
+  if (res?.success) {
+    toast(`${deleteTarget.name} deleted`);
+    closeModal('deleteModal');
+    deleteTarget = null;
+    currentPage  = 0;
+    loadCustomers();
+    loadKPIs();
+  }
+}
+
+// ── ADD POINTS ────────────────────────────────────────────────────
+let pointsTarget = null;
+function openPointsModal(c) {
+  pointsTarget = c;
+  document.getElementById('ptsCustName').textContent = c.name;
+  document.getElementById('pts_amount').value  = '';
+  document.getElementById('pts_reason').value  = '';
+  openModal('pointsModal');
+}
+async function doAddPoints() {
+  if (!pointsTarget) return;
+  const pts = parseInt(document.getElementById('pts_amount').value);
+  if (!pts || pts <= 0) { toast('Enter a valid points amount', 'error'); return; }
+  const res = await api('add_points', 'POST', { id: pointsTarget.id, points: pts });
+  if (res?.success) {
+    toast(`${pts} points added to ${pointsTarget.name}!`);
+    closeModal('pointsModal');
+    loadCustomers();
+    loadKPIs();
+  }
+}
+
+// ── IMPORT FROM ORDERS ─────────────────────────────────────────────
+async function importFromOrders() {
+  const btn = document.getElementById('importBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Importing…';
+  const res = await api('import_from_orders', 'POST', {});
+  btn.disabled = false;
+  btn.textContent = '⬇ Import from Orders';
+  if (res?.success) {
+    toast(res.message, 'success');
+    loadKPIs();
+    loadCustomers();
+  }
+}
+
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+</script>
+</body>
+</html>

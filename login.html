@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Padayon Kapetid POS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; overflow: hidden; }
+    button { cursor: pointer; border: none; outline: none; font-family: inherit; }
+    input  { font-family: inherit; outline: none; border: none; background: none; }
+
+    body { position: relative; background: #1A0A02; }
+
+    /* ── CAROUSEL BACKGROUND ── */
+    .bg-carousel { position: fixed; inset: 0; z-index: 0; }
+    .bg-slide {
+      position: absolute; inset: 0;
+      opacity: 0; transition: opacity 1.4s ease;
+      background-size: cover; background-position: center;
+    }
+    .bg-slide.active { opacity: 1; }
+    .bg-slide::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(10,5,2,0.55) 0%,
+        rgba(10,5,2,0.10) 45%,
+        rgba(10,5,2,0.72) 100%
+      );
+    }
+
+    /* ── TOP NAV BAR ── */
+    .top-nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 40px;
+    }
+
+    /* Logo left */
+    .nav-logo {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .nav-logo img {
+      height: 52px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+    }
+
+    /* Nav links center (decorative) */
+    .nav-links {
+      display: flex; gap: 32px;
+      position: absolute; left: 50%; transform: translateX(-50%);
+    }
+    .nav-link {
+      font-size: 13px; font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.5px;
+      text-decoration: none;
+      transition: color 0.2s;
+      cursor: default;
+    }
+
+    /* Sign In button top-right */
+    .nav-signin {
+      display: flex; align-items: center; gap: 28px;
+    }
+    .nav-signin-btn {
+      padding: 10px 26px;
+      background: linear-gradient(135deg, #8B4A22, #4A2008);
+      color: #F5E6C8;
+      border-radius: 6px;
+      font-size: 13px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      transition: all 0.22s;
+      border: 1px solid rgba(212,169,106,0.25);
+    }
+    .nav-signin-btn:hover {
+      background: linear-gradient(135deg, #A05828, #5A2A0E);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    }
+
+    /* ── CAROUSEL ARROWS ── */
+    .c-arrow {
+      position: fixed; top: 50%; transform: translateY(-50%);
+      z-index: 10; width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; font-size: 22px;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(6px); transition: all 0.2s;
+    }
+    .c-arrow:hover { background: rgba(212,169,106,0.25); transform: translateY(-50%) scale(1.08); }
+    .c-arrow.left  { left: 18px; }
+    .c-arrow.right { right: 18px; }
+
+    /* ── SLIDE HERO (bottom-left) ── */
+    .slide-hero {
+      position: fixed; bottom: 110px; left: 60px;
+      z-index: 10; pointer-events: none;
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    .slide-hero.active { opacity: 1; transform: translateY(0); }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 52px; font-weight: 800;
+      color: #fff; line-height: 1.1;
+      text-shadow: 0 2px 30px rgba(0,0,0,0.6);
+      margin-bottom: 10px;
+    }
+    .hero-sub {
+      font-size: 15px; color: rgba(255,255,255,0.6);
+      letter-spacing: 0.3px; margin-bottom: 28px;
+    }
+    .hero-signin-btn {
+      pointer-events: all;
+      display: inline-flex; align-items: center;
+      padding: 13px 34px;
+      background: transparent;
+      border: 1.5px solid rgba(255,255,255,0.7);
+      color: #fff; font-size: 12px; font-weight: 600;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      border-radius: 4px; transition: all 0.25s;
+    }
+    .hero-signin-btn:hover {
+      background: rgba(212,169,106,0.2);
+      border-color: #D4A96A; color: #D4A96A;
+      transform: translateY(-1px);
+    }
+
+    /* ── CAROUSEL DOTS ── */
+    .c-dots {
+      position: fixed; bottom: 22px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 10; display: flex; gap: 8px;
+    }
+    .cdot {
+      width: 8px; height: 8px; border-radius: 4px;
+      background: rgba(255,255,255,0.35); border: none;
+      padding: 0; cursor: pointer; transition: all 0.35s;
+    }
+    .cdot.active { width: 26px; background: #D4A96A; }
+
+    /* ── MODAL OVERLAY ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 50;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    /* ── GLASS LOGIN CARD ── */
+    .login-card {
+      width: 400px; max-width: 94vw;
+      /* frosted glass */
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(28px) saturate(160%);
+      -webkit-backdrop-filter: blur(28px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 24px;
+      padding: 40px 36px 36px;
+      box-shadow:
+        0 32px 80px rgba(0,0,0,0.55),
+        0 1px 0 rgba(255,255,255,0.15) inset;
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.4s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease;
+      opacity: 0;
+      position: relative;
+    }
+    .modal-overlay.open .login-card {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    /* Close */
+    .card-close {
+      position: absolute; top: 16px; right: 18px;
+      width: 28px; height: 28px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%; font-size: 13px;
+      color: rgba(255,255,255,0.8);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .card-close:hover { background: rgba(255,255,255,0.25); color: #fff; }
+
+    /* Card logo */
+    .card-logo {
+      display: flex; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .card-logo img {
+      height: 90px; object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+    }
+
+    .card-heading {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px; font-weight: 700;
+      color: #fff; text-align: center;
+      margin-bottom: 4px;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+    }
+    .card-sub {
+      font-size: 12px; color: rgba(255,255,255,0.55);
+      text-align: center; margin-bottom: 22px; letter-spacing: 0.3px;
+    }
+
+
+
+    /* ── ERROR ── */
+    .error-msg {
+      display: none; align-items: center; gap: 8px;
+      background: rgba(220,38,38,0.2);
+      border: 1px solid rgba(220,38,38,0.35);
+      color: #FCA5A5; border-radius: 9px;
+      padding: 9px 13px; font-size: 12px; font-weight: 500;
+      margin-bottom: 14px;
+    }
+    .error-msg.show { display: flex; }
+
+    /* ── FORM ── */
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: rgba(212,169,106,0.85); margin-bottom: 6px;
+    }
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute; left: 13px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px; opacity: 0.5; pointer-events: none;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px 12px 40px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      font-size: 13.5px; color: #fff;
+      transition: all 0.2s;
+    }
+    .form-input::placeholder { color: rgba(255,255,255,0.3); }
+    .form-input:focus {
+      border-color: rgba(212,169,106,0.6);
+      background: rgba(255,255,255,0.16);
+      box-shadow: 0 0 0 3px rgba(212,169,106,0.15);
+    }
+    .toggle-pass {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      background: none; font-size: 14px;
+      color: rgba(255,255,255,0.35); padding: 2px; transition: color 0.2s;
+    }
+    .toggle-pass:hover { color: rgba(212,169,106,0.9); }
+
+    /* ── LOGIN BUTTON ── */
+    .login-btn {
+      width: 100%; padding: 13px; margin-top: 8px;
+      background: linear-gradient(135deg, #8B4A22 0%, #5A2E0E 50%, #3D1C08 100%);
+      color: #F5E6C8; border-radius: 11px;
+      font-family: 'Playfair Display', serif;
+      font-size: 14px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      transition: all 0.25s;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.4),
+                  0 1px 0 rgba(212,169,106,0.2) inset;
+      border: 1px solid rgba(212,169,106,0.15);
+    }
+    .login-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 26px rgba(0,0,0,0.5);
+      background: linear-gradient(135deg, #9B5A32 0%, #6A3E1E 50%, #4D2C18 100%);
+    }
+    .login-btn:active { transform: translateY(0); }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .spinner {
+      display: inline-block; width: 13px; height: 13px;
+      border: 2px solid rgba(245,230,200,0.3);
+      border-top-color: #F5E6C8; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 7px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .top-nav { padding: 18px 22px; }
+      .hero-title { font-size: 36px; }
+      .slide-hero { left: 24px; bottom: 90px; }
+    }
+    @media (max-width: 480px) {
+      .hero-title { font-size: 28px; }
+      .login-card { padding: 32px 20px 28px; }
+      .nav-logo img { height: 40px; }
+      .nav-signin-btn { padding: 8px 18px; font-size: 11px; }
+    }
+
+    /* ── ADS VIDEO PANEL ── */
+    .ads-video-panel {
+      position: fixed;
+      top: 100px;
+      left: 50px;
+      z-index: 15;
+      width: 420px;
+      max-width: calc(50vw - 60px);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow:
+        0 8px 40px rgba(0,0,0,0.6),
+        0 0 0 1.5px rgba(212,169,106,0.3),
+        0 0 30px rgba(200,130,60,0.2);
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s;
+      background: #0a0500;
+    }
+    .ads-video-panel.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .ads-video-panel video {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 260px;
+      object-fit: cover;
+    }
+    .ads-video-label {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      background: rgba(212,169,106,0.85);
+      color: #1a0a02;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+
+    /* Hide video on small screens where it overlaps hero text */
+    @media (max-width: 768px) {
+      .ads-video-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── BACKGROUND CAROUSEL ── -->
+  <div class="bg-carousel">
+    <div class="bg-slide active" style="background-image:url('images/background/1.png')"></div>
+    <div class="bg-slide"        style="background-image:url('images/background/2.png')"></div>
+    <div class="bg-slide"        style="background-image:url('images/background/3.png')"></div>
+  </div>
+
+  <!-- ── TOP NAV ── -->
+  <div class="top-nav">
+    <div class="nav-logo">
+      <img src="images/background/logo.png" alt="Padayon Kapetid">
+    </div>
+    <div class="nav-links">
+      <span class="nav-link">Dashboard</span>
+      <span class="nav-link">Orders</span>
+      <span class="nav-link">Reports</span>
+    </div>
+    <div class="nav-signin">
+      <button class="nav-signin-btn" onclick="openModal()">Sign In</button>
+    </div>
+  </div>
+
+  <!-- ── CAROUSEL ARROWS ── -->
+  <button class="c-arrow left"  onclick="prevSlide()">&#8249;</button>
+  <button class="c-arrow right" onclick="nextSlide()">&#8250;</button>
+
+  <!-- ── ADS VIDEO PANEL ── -->
+  <div class="ads-video-panel" id="adsVideoPanel">
+    <span class="ads-video-label">Video</span>
+    <video autoplay muted loop playsinline>
+      <source src="images/background/ads.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <!-- ── SLIDE HERO CONTENT ── -->
+  <div class="slide-hero active">
+    <div class="hero-title">Legacy in<br>Every Cup</div>
+    <div class="hero-sub">Handcrafted coffee from the heart of every brew</div>
+    <button class="hero-signin-btn" onclick="openModal()">Sign In</button>
+  </div>
+  <div class="slide-hero">
+    <div class="hero-title">Fast &amp;<br>Seamless Orders</div>
+    <div class="hero-sub">Take and manage orders effortlessly</div>
+    <button class="hero-signin-btn" onclick="openModal()">Sign In</button>
+  </div>
+  <div class="slide-hero">
+    <div class="hero-title">Smart<br>Analytics</div>
+    <div class="hero-sub">Track sales and grow your business</div>
+    <button class="hero-signin-btn" onclick="openModal()">Sign In</button>
+  </div>
+
+  <!-- ── CAROUSEL DOTS ── -->
+  <div class="c-dots">
+    <button class="cdot active" onclick="goSlide(0)"></button>
+    <button class="cdot"        onclick="goSlide(1)"></button>
+    <button class="cdot"        onclick="goSlide(2)"></button>
+  </div>
+
+  <!-- ── LOGIN MODAL ── -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+    <div class="login-card">
+      <button class="card-close" onclick="closeModal()">✕</button>
+
+      <div class="card-logo">
+        <img src="images/background/logo.png" alt="Padayon Kapetid">
+      </div>
+
+      <h1 class="card-heading">Login Account</h1>
+      <p class="card-sub">Enter your credentials to continue</p>
+
+
+
+      <div class="error-msg" id="errorMsg">
+        <span>⚠</span><span id="errorText">Invalid credentials</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" class="form-input" id="username"
+                 placeholder="Enter username" autocomplete="username">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" class="form-input" id="password"
+                 placeholder="Enter password" autocomplete="current-password">
+          <button class="toggle-pass" onclick="togglePass()" type="button" id="toggleBtn">👁</button>
+        </div>
+      </div>
+
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">Log In</button>
+    </div>
+  </div>
+
+<script>
+(function(){ const t=localStorage.getItem('pk_theme')||'light'; document.documentElement.setAttribute('data-theme',t); })();
+
+/* ── CAROUSEL ── */
+let cur = 0;
+const bgSlides = document.querySelectorAll('.bg-slide');
+const heroes   = document.querySelectorAll('.slide-hero');
+const dots     = document.querySelectorAll('.cdot');
+
+function goSlide(n) {
+  const prev = cur;
+  cur = (n + bgSlides.length) % bgSlides.length;
+  if (prev === cur) return;
+  bgSlides[prev].classList.remove('active');
+  heroes[prev].classList.remove('active');
+  dots[prev].classList.remove('active');
+  bgSlides[cur].classList.add('active');
+  dots[cur].classList.add('active');
+  setTimeout(() => heroes[cur].classList.add('active'), 250);
+}
+function nextSlide() { goSlide(cur + 1); }
+function prevSlide() { goSlide(cur - 1); }
+
+let auto = setInterval(nextSlide, 5000);
+function resetAuto() { clearInterval(auto); auto = setInterval(nextSlide, 5000); }
+document.querySelectorAll('.c-arrow,.cdot').forEach(el => el.addEventListener('click', resetAuto));
+
+/* ── MODAL ── */
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('adsVideoPanel').classList.remove('visible'); // hide video when modal opens
+  clearInterval(auto);
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.getElementById('adsVideoPanel').classList.add('visible'); // restore video
+  hideError();
+  auto = setInterval(nextSlide, 5000);
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && document.getElementById('modalOverlay').classList.contains('open')) doLogin();
+});
+
+/* ── AUTH ── */
+function togglePass() {
+  const inp = document.getElementById('password');
+  const btn = document.getElementById('toggleBtn');
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '⌒'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+function showError(msg) {
+  document.getElementById('errorText').textContent = msg;
+  document.getElementById('errorMsg').classList.add('show');
+}
+function hideError() { document.getElementById('errorMsg').classList.remove('show'); }
+
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  hideError();
+  if (!username || !password) { showError('Please enter username and password.'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+  try {
+    const res  = await fetch('./php/auth.php?action=login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      sessionStorage.setItem('pos_user', JSON.stringify(data.user));
+      location.href = data.user.role === 'admin' ? 'index.html' : 'orders.html';
+    } else {
+      showError(data.error || 'Invalid username or password.');
+      btn.disabled = false; btn.innerHTML = 'Log In';
+    }
+  } catch(e) {
+    const demo = {
+      admin:   { id:1, username:'admin',   full_name:'Daniel Olaviaga', role:'admin' },
+      cashier: { id:2, username:'cashier', full_name:'Daniel Olaviaga', role:'cashier' }
+    };
+    if ((username==='admin' && password==='admin123') || (username==='cashier' && password==='cashier123')) {
+      const user = demo[username];
+      sessionStorage.setItem('pos_user', JSON.stringify(user));
+      location.href = user.role === 'admin' ? 'index.html' : 'orders.html';
+    } else {
+      showError('Invalid username or password.');
+      btn.disabled = false; btn.innerHTML = 'Log In';
+    }
+  }
+}
+
+// Already logged in?
+const existing = sessionStorage.getItem('pos_user');
+if (existing) {
+  try {
+    const u = JSON.parse(existing);
+    location.href = u.role === 'admin' ? 'index.html' : 'orders.html';
+  } catch(e) { sessionStorage.removeItem('pos_user'); }
+}
+
+// Fade in ads video panel
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('adsVideoPanel').classList.add('visible');
+  }, 400);
+});
+</script>
+</body>
+</html>

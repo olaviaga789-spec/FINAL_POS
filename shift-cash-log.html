@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){var t=localStorage.getItem('pk_theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+<style>
+/* SIDEBAR OVERRIDE */
+.sidebar {
+  position: fixed !important; top: 0 !important; left: 0 !important;
+  height: 100% !important; width: 220px !important;
+  background: #1A1A1A !important; z-index: 100 !important;
+  transform: translateX(-100%) !important;
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1) !important;
+  overflow: hidden !important; display: flex !important; flex-direction: column !important;
+}
+.sidebar.open { transform: translateX(0) !important; overflow: visible !important; }
+.sidebar:not(.open) .logo-text,
+.sidebar:not(.open) .nav-section-label,
+.sidebar:not(.open) .nav-item span,
+.sidebar:not(.open) .user-info,
+.sidebar:not(.open) #logoutMenu { display: none !important; }
+.sidebar.open .logo-text,
+.sidebar.open .nav-section-label,
+.sidebar.open .nav-item span,
+.sidebar.open .user-info { display: block !important; }
+.sidebar.open .nav-item { justify-content: flex-start !important; padding: 10px 12px !important; }
+.sidebar.open .sidebar-user { justify-content: flex-start !important; }
+.sidebar.open .sidebar-logo { justify-content: flex-start !important; padding: 22px 20px !important; }
+.main-content { width: 100% !important; margin-left: 0 !important; }
+.top-header { padding-left: 66px !important; }
+.sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; backdrop-filter: blur(2px); }
+.sidebar-backdrop.show { display: block; }
+#sidebarToggle {
+  display: flex !important; visibility: visible !important; opacity: 1 !important;
+  position: fixed !important; top: 14px !important; left: 14px !important;
+  z-index: 999999 !important; width: 42px !important; height: 42px !important;
+  border-radius: 10px !important; background: #1A1A1A !important;
+  border: none !important; cursor: pointer !important;
+  flex-direction: column !important; align-items: center !important;
+  justify-content: center !important; gap: 5px !important;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.4) !important; padding: 0 !important;
+}
+#sidebarToggle span {
+  display: block !important; width: 20px !important; height: 2px !important;
+  background: #C8A96E !important; border-radius: 2px !important; transition: 0.22s !important;
+}
+#sidebarToggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg) !important; }
+#sidebarToggle.open span:nth-child(2) { opacity: 0 !important; }
+#sidebarToggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg) !important; }
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shift & Cash Log — Padayon Kapetid</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=20260523">
+<style>
+/* ── PAGE LAYOUT ── */
+*, *::before, *::after { box-sizing: border-box; }
+body { overflow: hidden; }
+.app-shell { display: flex; height: 100vh; overflow: hidden; }
+.main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.top-header { height: 64px; flex-shrink: 0; background: var(--bg-card); border-bottom: 1.5px solid var(--border); display: flex; align-items: center; padding: 0 24px 0 66px; gap: 14px; }
+.top-header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; color: var(--text-dark); font-weight: 400; }
+.header-spacer { flex: 1; }
+
+/* ── TAB BAR ── */
+.tab-bar { display: flex; gap: 4px; background: var(--bg-main); border-bottom: 1.5px solid var(--border); padding: 10px 24px 0; flex-shrink: 0; }
+.tab-btn { padding: 8px 18px; border-radius: 10px 10px 0 0; font-size: 13px; font-weight: 600; color: var(--text-light); background: transparent; border: 1.5px solid transparent; border-bottom: none; cursor: pointer; transition: 0.18s; font-family: inherit; }
+.tab-btn.active { background: var(--bg-card); color: var(--accent); border-color: var(--border); border-bottom-color: var(--bg-card); margin-bottom: -1.5px; }
+.tab-btn:hover:not(.active) { color: var(--text-mid); background: rgba(200,169,110,0.06); }
+
+/* ── SCROLL BODY ── */
+.page-body { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.page-body::-webkit-scrollbar { width: 5px; }
+.page-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── TAB PANELS ── */
+.tab-panel { display: none; }
+.tab-panel.active { display: contents; }
+
+/* ── KPI STRIP ── */
+.kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.kpi-card { background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; position: relative; overflow: hidden; transition: 0.2s; }
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.kpi-card.dark { background: #1A1A1A; border-color: #1A1A1A; }
+.kpi-icon { position: absolute; top: 16px; right: 18px; font-size: 22px; opacity: 0.35; }
+.kpi-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); }
+.kpi-card.dark .kpi-label { color: rgba(200,169,110,0.55); }
+.kpi-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--text-dark); letter-spacing: 0.5px; line-height: 1; }
+.kpi-card.dark .kpi-value { color: #C8A96E; }
+.kpi-sub { font-size: 11.5px; color: var(--text-light); }
+.kpi-card.dark .kpi-sub { color: rgba(255,255,255,0.3); }
+
+/* ── SECTION CARD ── */
+.section-card { background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 18px; overflow: hidden; }
+.section-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid var(--border); }
+.section-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: var(--text-dark); font-weight: 400; }
+.section-sub { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.section-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ── SHIFT STATUS BANNER ── */
+.shift-banner { margin: 0 24px; border-radius: 14px; padding: 16px 22px; display: flex; align-items: center; gap: 16px; transition: 0.3s; }
+.shift-banner.open-state { background: linear-gradient(135deg, #1A1A1A 0%, #2a2a2a 100%); border: 1.5px solid rgba(200,169,110,0.3); }
+.shift-banner.closed-state { background: var(--bg-card); border: 1.5px solid var(--border); }
+.shift-banner-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.shift-banner.open-state .shift-banner-dot { background: #4CAF7D; box-shadow: 0 0 8px #4CAF7D; animation: pulse-dot 2s infinite; }
+.shift-banner.closed-state .shift-banner-dot { background: var(--text-light); }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.shift-banner-info { flex: 1; }
+.shift-banner-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
+.shift-banner.open-state .shift-banner-title { color: #fff; }
+.shift-banner-meta { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+.shift-banner.open-state .shift-banner-meta { color: rgba(255,255,255,0.4); }
+.shift-stats { display: flex; gap: 20px; }
+.shift-stat { text-align: center; }
+.shift-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #C8A96E; letter-spacing: 0.5px; line-height: 1; display: block; }
+.shift-stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: rgba(255,255,255,0.3); display: block; margin-top: 2px; }
+
+/* ── BUTTONS ── */
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.18s; border: 1.5px solid transparent; font-family: inherit; }
+.btn-primary { background: #1A1A1A; color: #C8A96E; border-color: #1A1A1A; }
+.btn-primary:hover { background: #2a2a2a; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+.btn-success { background: rgba(76,175,125,0.12); color: #2E7D56; border-color: rgba(76,175,125,0.3); }
+.btn-success:hover { background: rgba(76,175,125,0.2); }
+.btn-danger { background: rgba(220,38,38,0.1); color: #B91C1C; border-color: rgba(220,38,38,0.25); }
+.btn-danger:hover { background: rgba(220,38,38,0.18); }
+.btn-ghost { background: var(--bg-main); color: var(--text-mid); border-color: var(--border); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--text-dark); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+/* ── TABLE ── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { padding: 10px 18px; text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-light); background: var(--bg-main); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.data-table td { padding: 13px 18px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--bg-main); }
+.data-table td.mono { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 0.5px; }
+
+/* ── BADGES ── */
+.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.badge-open    { background: rgba(76,175,125,0.12); color: #2E7D56; }
+.badge-closed  { background: rgba(156,142,126,0.12); color: var(--text-mid); }
+.badge-in      { background: rgba(76,175,125,0.12); color: #2E7D56; }
+.badge-out     { background: rgba(220,38,38,0.1);   color: #B91C1C; }
+.badge-sale    { background: rgba(200,169,110,0.15); color: #8B6840; }
+.badge-refund  { background: rgba(245,158,11,0.12); color: #B45309; }
+.badge-adjust  { background: rgba(99,102,241,0.12); color: #4338CA; }
+.badge-float   { background: rgba(14,165,233,0.12); color: #0369A1; }
+
+/* ── CASH LOG AMOUNT ── */
+.amount-positive { color: #2E7D56; font-family: 'Bebas Neue', sans-serif; font-size: 16px; }
+.amount-negative { color: #B91C1C; font-family: 'Bebas Neue', sans-serif; font-size: 16px; }
+.amount-neutral  { color: var(--text-dark); font-family: 'Bebas Neue', sans-serif; font-size: 16px; }
+
+/* ── VARIANCE INDICATOR ── */
+.variance-positive { color: #2E7D56; font-weight: 700; }
+.variance-negative { color: #B91C1C; font-weight: 700; }
+.variance-zero     { color: var(--text-light); }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(26,20,10,0.55); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: var(--bg-card); border-radius: 22px; width: 480px; max-width: 95vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 16px 50px rgba(0,0,0,0.22); transform: scale(0.95); transition: transform 0.2s; }
+.modal-overlay.open .modal { transform: scale(1); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 800; }
+.modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-main); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-mid); cursor: pointer; border: none; transition: 0.18s; }
+.modal-close:hover { background: var(--border); }
+.modal-body { overflow-y: auto; padding: 22px 24px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+.modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+/* ── FORM ELEMENTS ── */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.9px; color: var(--text-mid); }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-size: 13.5px; color: var(--text-dark);
+  background: var(--bg-main); transition: 0.18s; font-family: inherit;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); background: var(--bg-card); outline: none; box-shadow: 0 0 0 3px rgba(200,169,110,0.12); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-hint { font-size: 11.5px; color: var(--text-light); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 48px 24px; color: var(--text-light); }
+.empty-icon { font-size: 44px; margin-bottom: 12px; }
+.empty-state h3 { font-size: 16px; font-weight: 700; color: var(--text-mid); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; }
+
+/* ── SKELETON ── */
+.skel { background: linear-gradient(90deg,var(--border) 25%,rgba(232,223,208,0.4) 50%,var(--border) 75%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; border-radius: 8px; }
+@keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+
+/* ── TOAST ── */
+.toast-wrap { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 10px 16px; border-radius: 10px; background: #1A1A1A; color: #fff; font-size: 13px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; }
+.toast.success { border-left: 3px solid #4CAF7D; }
+.toast.error   { border-left: 3px solid #EF4444; }
+@keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* ── FILTER BAR ── */
+.filter-bar { display: flex; gap: 10px; align-items: center; padding: 14px 22px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.filter-search { display: flex; align-items: center; gap: 8px; background: var(--bg-main); border: 1.5px solid var(--border); border-radius: 8px; padding: 7px 12px; flex: 1; max-width: 280px; }
+.filter-search input { background: transparent; font-size: 13px; color: var(--text-dark); width: 100%; font-family: inherit; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .form-row { grid-template-columns: 1fr; }
+  .shift-stats { display: none; }
+  .page-body { padding: 14px; }
+}
+@media (max-width: 480px) {
+  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  .top-header h1 { font-size: 20px; }
+}
+  /* ══════════════════════════════════════════════════════
+     DARK MODE — Complete coverage
+     ══════════════════════════════════════════════════════ */
+  html[data-theme="dark"] {
+    --bg-main:   #0F0F0F;
+    --bg-card:   #181818;
+    --bg-panel:  #181818;
+    --border:    rgba(255,255,255,0.08);
+    --text-dark: #F0EBE0;
+    --text-mid:  #A09080;
+    --text-light:#5A5046;
+    --accent:    #C8A96E;
+    --primary:   #1A1A1A;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  html[data-theme="dark"] body { background: #0F0F0F; color: #F0EBE0; }
+
+  /* Layout */
+  html[data-theme="dark"] .app-shell { background: #0F0F0F; }
+  html[data-theme="dark"] .main-content { background: #0F0F0F; }
+
+  /* Header */
+  html[data-theme="dark"] .top-header { background: #111 !important; border-color: rgba(255,255,255,0.07) !important; }
+  html[data-theme="dark"] .top-header h1 { color: #F0EBE0 !important; }
+
+  /* Cards & Panels */
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-label { color: #5A5046; }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-value { color: #F0EBE0; }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-sub { color: #5A5046; }
+  html[data-theme="dark"] .kpi-card:not(.dark):not(.accent):not(.accent-card) .kpi-footer { color: #5A5046; }
+  html[data-theme="dark"] .chart-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .panel { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .section-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .stat-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+
+  /* Section titles */
+  html[data-theme="dark"] .section-title { color: #F0EBE0; }
+  html[data-theme="dark"] .section-subtitle { color: #5A5046; }
+  html[data-theme="dark"] .panel-title { color: #F0EBE0; }
+  html[data-theme="dark"] .panel-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .panel-badge { background: #222; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .section-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .section-sub { color: #5A5046; }
+  html[data-theme="dark"] .stat-label { color: #5A5046; }
+  html[data-theme="dark"] .stat-value { color: #C8A96E; }
+  html[data-theme="dark"] .stat-sub { color: #5A5046; }
+
+  /* Charts — axis labels & gridlines */
+  html[data-theme="dark"] .chart-card .section-title { color: #F0EBE0; }
+  html[data-theme="dark"] .legend-item { color: #A09080; }
+  html[data-theme="dark"] .donut-center-val { color: #F0EBE0; }
+  html[data-theme="dark"] .donut-center-lbl { color: #5A5046; }
+  html[data-theme="dark"] .donut-leg-item { color: #A09080; }
+  html[data-theme="dark"] .cat-icon-wrap { background: #222; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .cat-name { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-revenue { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-bar-wrap { background: rgba(255,255,255,0.06); }
+
+  /* Tables */
+  html[data-theme="dark"] .orders-table th,
+  html[data-theme="dark"] .inv-table th { background: #111; color: #5A5046; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .orders-table td,
+  html[data-theme="dark"] .inv-table td { color: #F0EBE0; border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .orders-table tr:hover td,
+  html[data-theme="dark"] .inv-table tr:hover td { background: rgba(255,255,255,0.03); }
+  html[data-theme="dark"] .inv-table-wrap { background: #181818; }
+  html[data-theme="dark"] .item-name { color: #F0EBE0; }
+  html[data-theme="dark"] .item-cat  { color: #5A5046; }
+  html[data-theme="dark"] .price-cell { color: #F0EBE0; }
+  html[data-theme="dark"] .stock-bar-wrap { background: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .action-btn { background: #222; border-color: rgba(255,255,255,0.1); color: #A09080; }
+  html[data-theme="dark"] .action-btn:hover { border-color: #C8A96E; color: #C8A96E; background: rgba(200,169,110,0.08); }
+
+  /* Search & filters */
+  html[data-theme="dark"] .search-wrap { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .search-wrap input { color: #F0EBE0; }
+  html[data-theme="dark"] .search-box { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .search-box input { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-select,
+  html[data-theme="dark"] .cat-filter,
+  html[data-theme="dark"] .form-select { background: #181818; border-color: rgba(255,255,255,0.08); color: #F0EBE0; }
+  html[data-theme="dark"] .filter-bar { background: #111; border-color: rgba(255,255,255,0.07); }
+  html[data-theme="dark"] .period-tab { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .period-tab:hover:not(.active) { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .sort-chip { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .sort-chip:hover:not(.active) { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .period-tabs { background: #181818; border-color: rgba(255,255,255,0.08); }
+
+  /* Buttons */
+  html[data-theme="dark"] .btn-ghost { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .btn-ghost:hover { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .btn-outline { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .btn-outline:hover { border-color: #C8A96E; color: #F0EBE0; }
+  html[data-theme="dark"] .refresh-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .refresh-btn:hover { border-color: #C8A96E; color: #C8A96E; }
+  html[data-theme="dark"] .icon-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .export-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #C8A96E; }
+  html[data-theme="dark"] .page-btn { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .page-btn:hover:not(.active):not(:disabled) { border-color: #C8A96E; color: #F0EBE0; }
+
+  /* Modals */
+  html[data-theme="dark"] .modal,
+  html[data-theme="dark"] .m-box { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-head,
+  html[data-theme="dark"] .m-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-foot,
+  html[data-theme="dark"] .m-footer { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-title,
+  html[data-theme="dark"] .m-title { color: #F0EBE0; }
+  html[data-theme="dark"] .modal-close,
+  html[data-theme="dark"] .m-close { background: #222; color: #A09080; }
+  html[data-theme="dark"] .modal-close:hover,
+  html[data-theme="dark"] .m-close:hover { background: #2a2a2a; }
+  html[data-theme="dark"] .form-input,
+  html[data-theme="dark"] .modal-input,
+  html[data-theme="dark"] .form-textarea,
+  html[data-theme="dark"] .form-select { background: #111; border-color: rgba(255,255,255,0.1); color: #F0EBE0; }
+  html[data-theme="dark"] .form-label,
+  html[data-theme="dark"] .modal-label,
+  html[data-theme="dark"] .form-label { color: #A09080; }
+  html[data-theme="dark"] .form-hint { color: #5A5046; }
+  html[data-theme="dark"] .form-input:focus,
+  html[data-theme="dark"] .modal-input:focus,
+  html[data-theme="dark"] .form-textarea:focus { border-color: #C8A96E; background: #181818; }
+
+  /* Customer directory */
+  html[data-theme="dark"] .customer-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .customer-name { color: #F0EBE0; }
+  html[data-theme="dark"] .customer-phone { color: #5A5046; }
+  html[data-theme="dark"] .customer-stat { background: #111; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .customer-stat-lbl { color: #5A5046; }
+  html[data-theme="dark"] .loyalty-bar-wrap { background: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .tier-platinum { background: rgba(99,102,241,0.2); color: #818CF8; border-color: rgba(99,102,241,0.4); }
+  html[data-theme="dark"] .tier-gold { background: rgba(200,169,110,0.2); color: #C8A96E; border-color: rgba(200,169,110,0.4); }
+  html[data-theme="dark"] .tier-silver { background: rgba(200,200,200,0.15); color: #C0C0C0; border-color: rgba(200,200,200,0.3); }
+  html[data-theme="dark"] .tier-bronze { background: rgba(205,127,50,0.2); color: #CD7F32; border-color: rgba(205,127,50,0.4); }
+  html[data-theme="dark"] .detail-section { background: #111; }
+  html[data-theme="dark"] .detail-section-title { color: #5A5046; }
+  html[data-theme="dark"] .detail-row { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .detail-label { color: #5A5046; }
+  html[data-theme="dark"] .detail-value { color: #F0EBE0; }
+  html[data-theme="dark"] .detail-stat-box { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .detail-stat-lbl { color: #5A5046; }
+
+  /* Inventory */
+  html[data-theme="dark"] .cat-icon-box { background: #222; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .cat-info .cat-name { color: #F0EBE0; }
+  html[data-theme="dark"] .cat-items-count { color: #5A5046; }
+  html[data-theme="dark"] .cat-val { color: #F0EBE0; }
+  html[data-theme="dark"] .alert-item { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .alert-name { color: #F0EBE0; }
+  html[data-theme="dark"] .alert-detail { color: #5A5046; }
+  html[data-theme="dark"] .no-alerts { color: #5A5046; }
+  html[data-theme="dark"] .item-emoji { background: #222; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal { background: #181818; }
+  html[data-theme="dark"] .modal-title { color: #F0EBE0; }
+  html[data-theme="dark"] .modal-cancel { background: #222; border-color: rgba(255,255,255,0.1); color: #A09080; }
+  html[data-theme="dark"] .modal-input { background: #111; border-color: rgba(255,255,255,0.1); color: #F0EBE0; }
+
+  /* Orders page */
+  html[data-theme="dark"] .status-tab { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .status-tab.active { background: #1A1A1A; color: #C8A96E; }
+  html[data-theme="dark"] .strip-label { color: #5A5046; }
+  html[data-theme="dark"] .strip-value { color: #F0EBE0; }
+  html[data-theme="dark"] .strip-sub { color: #5A5046; }
+  html[data-theme="dark"] .panel-count { color: #5A5046; }
+  html[data-theme="dark"] .order-id { color: #F0EBE0; }
+  html[data-theme="dark"] .o-modal-body { background: #181818; }
+  html[data-theme="dark"] .detail-label { color: #5A5046; }
+  html[data-theme="dark"] .detail-value { color: #F0EBE0; }
+  html[data-theme="dark"] .totals-block { background: #111; }
+  html[data-theme="dark"] .item-qty { background: #222; border-color: rgba(255,255,255,0.08); color: #F0EBE0; }
+  html[data-theme="dark"] .o-modal-close { background: #222; color: #A09080; }
+
+  /* Sales report */
+  html[data-theme="dark"] .summary-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .summary-card .card-label { color: #5A5046; }
+  html[data-theme="dark"] .summary-card .card-value { color: #C8A96E; }
+  html[data-theme="dark"] .summary-card .card-sub { color: #5A5046; }
+  html[data-theme="dark"] .report-grid .panel { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .bar-label { color: #5A5046; }
+  html[data-theme="dark"] .bar-val { color: #A09080; }
+  html[data-theme="dark"] .item-name { color: #F0EBE0; }
+  html[data-theme="dark"] .item-cat { color: #5A5046; }
+  html[data-theme="dark"] .item-qty { color: #5A5046; }
+  html[data-theme="dark"] .item-rev { color: #C8A96E; }
+  html[data-theme="dark"] .cat-amt { color: #A09080; }
+  html[data-theme="dark"] .date-field { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .date-field input[type="date"] { color: #F0EBE0; background: transparent; }
+
+  /* Shift & Cash log */
+  html[data-theme="dark"] .tab-bar { background: #111; border-color: rgba(255,255,255,0.07); }
+  html[data-theme="dark"] .tab-btn { color: #5A5046; }
+  html[data-theme="dark"] .tab-btn.active { color: #F0EBE0; background: #181818; border-color: rgba(255,255,255,0.08) rgba(255,255,255,0.08) #0F0F0F; }
+  html[data-theme="dark"] .shift-banner { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .shift-banner-title { color: #F0EBE0; }
+  html[data-theme="dark"] .shift-banner-meta { color: #5A5046; }
+  html[data-theme="dark"] .cash-log-row { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .cash-log-type { color: #A09080; }
+  html[data-theme="dark"] .cash-log-desc { color: #5A5046; }
+  html[data-theme="dark"] .cash-log-amt { color: #F0EBE0; }
+  html[data-theme="dark"] .shift-row { border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .shift-id { color: #F0EBE0; }
+  html[data-theme="dark"] .shift-cashier { color: #A09080; }
+  html[data-theme="dark"] .shift-date { color: #5A5046; }
+  html[data-theme="dark"] .variance-pos { color: #4CAF7D; }
+  html[data-theme="dark"] .variance-neg { color: #EF4444; }
+
+  /* Menu management */
+  html[data-theme="dark"] .menu-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .menu-card-top { background: #222; }
+  html[data-theme="dark"] .menu-card-cat { color: #C8A96E; }
+  html[data-theme="dark"] .menu-card-name { color: #F0EBE0; }
+  html[data-theme="dark"] .menu-card-desc { color: #5A5046; }
+  html[data-theme="dark"] .menu-card-price { color: #F0EBE0; }
+  html[data-theme="dark"] .card-btn { background: #222; border-color: rgba(255,255,255,0.08); color: #A09080; }
+  html[data-theme="dark"] .card-btn:hover { border-color: #C8A96E; background: rgba(200,169,110,0.1); }
+  html[data-theme="dark"] .cat-table th { background: #111; color: #5A5046; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .cat-table td { border-color: rgba(255,255,255,0.05); color: #F0EBE0; }
+  html[data-theme="dark"] .cat-table tr:hover td { background: rgba(255,255,255,0.03); }
+  html[data-theme="dark"] .view-tab { background: #181818; border-color: rgba(255,255,255,0.08); color: #5A5046; }
+  html[data-theme="dark"] .view-tab.active { background: #1A1A1A; color: #C8A96E; }
+  html[data-theme="dark"] .img-upload-drop { background: #111; border-color: rgba(255,255,255,0.1); }
+  html[data-theme="dark"] .img-upload-drop:hover { border-color: #C8A96E; background: rgba(200,169,110,0.04); }
+  html[data-theme="dark"] .toggle-label { color: #F0EBE0; }
+  html[data-theme="dark"] .toggle-sub { color: #5A5046; }
+  html[data-theme="dark"] .toggle-slider { background: rgba(255,255,255,0.1); }
+
+  /* Scrollbars in dark mode */
+  html[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+  html[data-theme="dark"] ::-webkit-scrollbar-track { background: transparent; }
+
+  /* Skeleton shimmer in dark mode */
+  html[data-theme="dark"] .skel,
+  html[data-theme="dark"] .skeleton { background: linear-gradient(90deg,#1e1e1e 25%,#2a2a2a 50%,#1e1e1e 75%); background-size:400% 100%; }
+
+
+  html[data-theme="dark"] body { background: #0F0F0F; color: #F0EBE0; }
+  html[data-theme="dark"] .top-header { background: #111 !important; border-color: rgba(255,255,255,0.07) !important; }
+  html[data-theme="dark"] .top-header h1 { color: #F0EBE0 !important; }
+  html[data-theme="dark"] .tab-bar { background: #111 !important; border-color: rgba(255,255,255,0.07) !important; }
+  html[data-theme="dark"] .tab-btn { color: #5A5046; }
+  html[data-theme="dark"] .tab-btn.active { color: #F0EBE0; border-color: rgba(255,255,255,0.08) rgba(255,255,255,0.08) #0F0F0F; background: #181818; }
+  html[data-theme="dark"] .page-body { background: #0F0F0F; }
+  html[data-theme="dark"] .section-card { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .section-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .section-title { color: #F0EBE0; }
+  html[data-theme="dark"] .section-sub { color: #5A5046; }
+  html[data-theme="dark"] .shift-banner { background: #181818 !important; border-color: rgba(255,255,255,0.08) !important; }
+  html[data-theme="dark"] .shift-banner-title { color: #F0EBE0; }
+  html[data-theme="dark"] .shift-banner-meta { color: #5A5046; }
+  html[data-theme="dark"] .shift-banner-dot { background: #5A5046; }
+  html[data-theme="dark"] .form-input,
+  html[data-theme="dark"] .form-select { background: #111; border-color: rgba(255,255,255,0.1); color: #F0EBE0; }
+  html[data-theme="dark"] .form-label { color: #A09080; }
+  html[data-theme="dark"] .modal,
+  html[data-theme="dark"] .m-box { background: #181818; border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-head,
+  html[data-theme="dark"] .m-head { border-color: rgba(255,255,255,0.08); }
+  html[data-theme="dark"] .modal-title,
+  html[data-theme="dark"] .m-title { color: #F0EBE0; }
+  html[data-theme="dark"] .modal-close,
+  html[data-theme="dark"] .m-close { background: #222; color: #A09080; }
+  html[data-theme="dark"] .table-wrap table th { background: #111; color: #5A5046; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .table-wrap table td { color: #F0EBE0; border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .table-wrap table tr:hover td { background: rgba(255,255,255,0.03); }
+  html[data-theme="dark"] .cash-log-table th { background: #111; color: #5A5046; border-color: rgba(255,255,255,0.06); }
+  html[data-theme="dark"] .cash-log-table td { color: #F0EBE0; border-color: rgba(255,255,255,0.05); }
+  html[data-theme="dark"] .empty-state { color: #5A5046; }
+  html[data-theme="dark"] .btn-ghost { background: #181818; border-color: rgba(255,255,255,0.08); color: #A09080; }
+</style>
+</head>
+<body>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<button id="sidebarToggle" onclick="toggleSidebarNav()" aria-label="Toggle menu">
+  <span></span><span></span><span></span>
+</button>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <div class="main-content">
+    <!-- TOP HEADER -->
+    <header class="top-header">
+      <h1>📋 SHIFT &amp; CASH LOG</h1>
+      <div class="header-spacer"></div>
+      <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↺ Refresh</button>
+    </header>
+
+    <!-- TAB BAR -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('overview', this)">⏱ Current Shift</button>
+      <button class="tab-btn" onclick="switchTab('history', this)">📅 Shift History</button>
+      <button class="tab-btn" onclick="switchTab('cashlog', this)">💵 Cash Log</button>
+    </div>
+
+    <!-- SCROLLABLE BODY -->
+    <div class="page-body" id="pageBody">
+
+      <!-- ══════════════ TAB: OVERVIEW ══════════════ -->
+      <div class="tab-panel active" id="tab-overview">
+
+        <!-- KPI Strip -->
+        <div class="kpi-strip" id="kpiStrip">
+          <div class="kpi-card skel" style="height:100px"></div>
+          <div class="kpi-card skel" style="height:100px"></div>
+          <div class="kpi-card skel" style="height:100px"></div>
+          <div class="kpi-card skel" style="height:100px"></div>
+        </div>
+
+        <!-- Current Shift Banner -->
+        <div id="shiftBanner"></div>
+
+        <!-- Cash Movement Section -->
+        <div class="section-card" id="cashMovementCard" style="display:none">
+          <div class="section-head">
+            <div>
+              <div class="section-title">CASH MOVEMENTS</div>
+              <div class="section-sub" id="cashMovementSub">Transactions in current shift</div>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-ghost btn-sm" onclick="openCashMoveModal('cash_in')">+ Cash In</button>
+              <button class="btn btn-ghost btn-sm" onclick="openCashMoveModal('cash_out')">− Cash Out</button>
+              <button class="btn btn-ghost btn-sm" onclick="openCashMoveModal('adjustment')">⚖ Adjustment</button>
+            </div>
+          </div>
+          <div id="cashLogBody">
+            <div class="empty-state"><div class="empty-icon">💵</div><p>No cash movements yet this shift</p></div>
+          </div>
+        </div>
+
+      </div><!-- /tab-overview -->
+
+      <!-- ══════════════ TAB: HISTORY ══════════════ -->
+      <div class="tab-panel" id="tab-history">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <div class="section-title">SHIFT HISTORY</div>
+              <div class="section-sub">All recorded shifts</div>
+            </div>
+            <div class="section-actions">
+              <select class="form-select" style="width:auto;padding:7px 12px;font-size:12px" id="historyFilter" onchange="loadShiftHistory()">
+                <option value="">All Shifts</option>
+                <option value="open">Open Only</option>
+                <option value="closed">Closed Only</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table" id="historyTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cashier</th>
+                  <th>Opened</th>
+                  <th>Closed</th>
+                  <th>Duration</th>
+                  <th>Float In</th>
+                  <th>Sales</th>
+                  <th>Orders</th>
+                  <th>Variance</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody">
+                <tr><td colspan="11" style="text-align:center;padding:32px;color:var(--text-light)">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /tab-history -->
+
+      <!-- ══════════════ TAB: CASH LOG ══════════════ -->
+      <div class="tab-panel" id="tab-cashlog">
+        <div class="section-card">
+          <div class="section-head">
+            <div>
+              <div class="section-title">CASH LOG</div>
+              <div class="section-sub">All cash movements across shifts</div>
+            </div>
+            <div class="section-actions">
+              <select class="form-select" style="width:auto;padding:7px 12px;font-size:12px" id="cashlogShiftFilter" onchange="loadCashLogByShift()">
+                <option value="">Select Shift</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>Recorded By</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody id="cashlogBody">
+                <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-light)">Select a shift above to view its cash log</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /tab-cashlog -->
+
+    </div><!-- /page-body -->
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: OPEN SHIFT ═══════════ -->
+<div class="modal-overlay" id="openShiftModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">🟢 Open New Shift</div>
+      <button class="modal-close" onclick="closeModal('openShiftModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Cashier Name</label>
+        <input type="text" class="form-input" id="os_cashierName" placeholder="Enter cashier name" readonly>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Opening Float (₱)</label>
+        <input type="number" class="form-input" id="os_float" placeholder="0.00" min="0" step="0.01">
+        <span class="form-hint">Starting cash in the register</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes (Optional)</label>
+        <textarea class="form-textarea" id="os_notes" placeholder="Any notes for this shift..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('openShiftModal')">Cancel</button>
+      <button class="btn btn-success" onclick="doOpenShift()">🟢 Open Shift</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: CLOSE SHIFT ═══════════ -->
+<div class="modal-overlay" id="closeShiftModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">🔴 Close Shift</div>
+      <button class="modal-close" onclick="closeModal('closeShiftModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--bg-main);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text-mid);margin-bottom:4px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Shift opened at:</span><strong id="cs_openedAt">—</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>Total sales:</span><strong id="cs_totalSales" style="color:#2E7D56">₱0.00</strong></div>
+        <div style="display:flex;justify-content:space-between"><span>Expected cash:</span><strong id="cs_expectedCash">₱0.00</strong></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Closing Float — Counted Cash (₱)</label>
+        <input type="number" class="form-input" id="cs_closingFloat" placeholder="0.00" min="0" step="0.01" oninput="updateVariance()">
+      </div>
+      <div id="varianceBox" style="display:none;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;text-align:center;margin-top:4px"></div>
+      <div class="form-group">
+        <label class="form-label">Closing Notes (Optional)</label>
+        <textarea class="form-textarea" id="cs_notes" placeholder="Any end-of-shift notes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('closeShiftModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="doCloseShift()">🔴 Close Shift</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: CASH MOVEMENT ═══════════ -->
+<div class="modal-overlay" id="cashMoveModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="cashMoveTitle">💵 Record Cash Movement</div>
+      <button class="modal-close" onclick="closeModal('cashMoveModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="cm_type">
+          <option value="cash_in">💚 Cash In (added to register)</option>
+          <option value="cash_out">🔴 Cash Out (removed from register)</option>
+          <option value="adjustment">⚖ Adjustment</option>
+          <option value="refund">↩ Refund</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount (₱)</label>
+        <input type="number" class="form-input" id="cm_amount" placeholder="0.00" min="0.01" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description / Reason</label>
+        <input type="text" class="form-input" id="cm_desc" placeholder="e.g. Change fund top-up, expense payment...">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('cashMoveModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doCashMove()">Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: SHIFT DETAIL ═══════════ -->
+<div class="modal-overlay" id="shiftDetailModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-head">
+      <div class="modal-title" id="sdTitle">Shift Detail</div>
+      <button class="modal-close" onclick="closeModal('shiftDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="sdBody" style="gap:12px">
+      <p style="color:var(--text-light)">Loading...</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('shiftDetailModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="js/auth-check.js"></script>
+<script>
+const _user = requireLogin(['admin','cashier']);
+if (_user) buildNav('shift', _user);
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   SHIFT & CASH LOG — FRONTEND LOGIC
+   ══════════════════════════════════════════════════════════════ */
+
+const API  = './php/shifts.php';
+let currentShift = null;
+let currentUser  = null;
+
+// ── INIT ──────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  try { currentUser = JSON.parse(sessionStorage.getItem('pos_user')); } catch(e) {}
+  if (!currentUser) currentUser = { id: 0, full_name: 'Staff', role: 'cashier' };
+
+  await loadKPIs();
+  await loadCurrentShift();
+  await loadShiftHistory();
+  await populateShiftFilter();
+});
+
+// ── TAB SWITCH ────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// ── API HELPER ────────────────────────────────────────────────────
+async function api(action, method = 'GET', body = null, extra = '', silent = false) {
+  try {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res  = await fetch(`${API}?action=${action}${extra}`, opts);
+    const data = await res.json();
+    if (data && data.error) {
+      if (!silent) toast(data.error, 'error');
+      return null;
+    }
+    return data;
+  } catch(e) {
+    if (!silent) toast('Server unreachable — check PHP backend', 'error');
+    return null;
+  }
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const wrap = document.getElementById('toastWrap');
+  const el   = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = (type === 'success' ? '✓ ' : '⚠ ') + msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ── FORMAT HELPERS ────────────────────────────────────────────────
+function php(n) { return '₱' + parseFloat(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtDT(str) {
+  if (!str) return '—';
+  const d = new Date(str);
+  return d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) + ' '
+       + d.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+}
+function calcDuration(opened, closed) {
+  const ms = (closed ? new Date(closed) : new Date()) - new Date(opened);
+  const h  = Math.floor(ms / 3600000);
+  const m  = Math.floor((ms % 3600000) / 60000);
+  return `${h}h ${m}m`;
+}
+
+// ── LIVE SALES FETCH — uses orders API directly, no shift_sales needed ───────
+async function fetchLiveSales(shiftId, openedAt) {
+  // Try shift_sales first (new PHP); fall back to orders list if unavailable
+  try {
+    const url = `${API}?action=shift_sales&shift_id=${shiftId}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (data && !data.error && typeof data.total_sales !== 'undefined') {
+      updateBannerSales(data.total_sales, data.total_orders);
+      // Cache for close modal
+      if (currentShift) {
+        currentShift._liveSales    = parseFloat(data.total_sales);
+        currentShift._liveOrders   = parseInt(data.total_orders) || 0;
+        currentShift._expectedCash = parseFloat(currentShift.opening_float) + currentShift._liveSales;
+      }
+      return data;
+    }
+  } catch(e) { /* fall through */ }
+
+  // Fallback: query orders directly using the existing list action
+  try {
+    const url  = `./php/orders.php?action=list`;
+    const res  = await fetch(url);
+    const orders = await res.json();
+    if (Array.isArray(orders)) {
+      const opened = currentShift?.opened_at ? new Date(currentShift.opened_at) : new Date(0);
+      const completed = orders.filter(o =>
+        o.status === 'completed' && new Date(o.created_at) >= opened
+      );
+      const sales  = completed.reduce((s, o) => s + parseFloat(o.subtotal || 0), 0);
+      const count  = completed.length;
+      updateBannerSales(sales, count);
+      if (currentShift) {
+        currentShift._liveSales    = sales;
+        currentShift._liveOrders   = count;
+        currentShift._expectedCash = parseFloat(currentShift.opening_float) + sales;
+      }
+      return { total_sales: sales, total_orders: count };
+    }
+  } catch(e) { /* silent */ }
+
+  // Both failed — show zeros, no toast
+  updateBannerSales(0, 0);
+  return null;
+}
+
+function updateBannerSales(sales, orders) {
+  const salesEl  = document.getElementById('bannerSales');
+  const ordersEl = document.getElementById('bannerOrders');
+  if (salesEl)  salesEl.textContent  = php(sales);
+  if (ordersEl) ordersEl.textContent = orders;
+}
+
+// ── KPIs (today's summary) ────────────────────────────────────────
+async function loadKPIs() {
+  const strip = document.getElementById('kpiStrip');
+  let data = await api('summary', 'GET', null, '', true); // silent
+
+  // If shifts.php summary fails (old PHP), build KPIs from orders API instead
+  if (!data) {
+    try {
+      const res    = await fetch('./php/orders.php?action=list');
+      const orders = await res.json();
+      if (Array.isArray(orders)) {
+        const today = new Date().toDateString();
+        const todayCompleted = orders.filter(o =>
+          o.status === 'completed' && new Date(o.created_at).toDateString() === today
+        );
+        const sales = todayCompleted.reduce((s, o) => s + parseFloat(o.subtotal || 0), 0);
+        data = {
+          total_shifts: 1, open_shifts: 1,
+          total_sales: sales, total_orders: todayCompleted.length,
+          total_variance: 0
+        };
+      }
+    } catch(e) { /* silent */ }
+  }
+
+  if (!data) {
+    strip.innerHTML = `
+      <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-label">Total Shifts Today</div><div class="kpi-value">—</div></div>
+      <div class="kpi-card"><div class="kpi-icon">🟢</div><div class="kpi-label">Open Shifts</div><div class="kpi-value">—</div></div>
+      <div class="kpi-card dark"><div class="kpi-icon">💰</div><div class="kpi-label">Today's Sales</div><div class="kpi-value">₱0</div></div>
+      <div class="kpi-card"><div class="kpi-icon">⚖</div><div class="kpi-label">Cash Variance</div><div class="kpi-value">₱0</div></div>
+    `; return;
+  }
+  const varClass = parseFloat(data.total_variance) > 0 ? 'variance-positive' : parseFloat(data.total_variance) < 0 ? 'variance-negative' : 'variance-zero';
+  strip.innerHTML = `
+    <div class="kpi-card">
+      <span class="kpi-icon">📋</span>
+      <div class="kpi-label">Total Shifts Today</div>
+      <div class="kpi-value">${parseInt(data.total_shifts) || 0}</div>
+      <div class="kpi-sub">${parseInt(data.open_shifts) || 0} currently open</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">🧾</span>
+      <div class="kpi-label">Total Orders</div>
+      <div class="kpi-value">${parseInt(data.total_orders) || 0}</div>
+      <div class="kpi-sub">Across all today's shifts</div>
+    </div>
+    <div class="kpi-card dark">
+      <span class="kpi-icon">💰</span>
+      <div class="kpi-label">Today's Sales</div>
+      <div class="kpi-value">${php(data.total_sales)}</div>
+      <div class="kpi-sub">All completed shifts</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-icon">⚖</span>
+      <div class="kpi-label">Total Variance</div>
+      <div class="kpi-value ${varClass}">${php(data.total_variance)}</div>
+      <div class="kpi-sub">Overage / shortage</div>
+    </div>
+  `;
+}
+
+// ── CURRENT SHIFT BANNER ──────────────────────────────────────────
+async function loadCurrentShift() {
+  const cashier_id = currentUser?.id || 0;
+  const extraParam = currentUser?.role === 'admin' ? '' : `&cashier_id=${cashier_id}`;
+  const shift = await api('current_shift', 'GET', null, extraParam, true); // silent — no toast on bg load
+  currentShift = shift;
+
+  const banner  = document.getElementById('shiftBanner');
+  const moveCard = document.getElementById('cashMovementCard');
+
+  if (shift) {
+    // There's an open shift — fetch live sales silently in background
+    moveCard.style.display = 'block';
+    document.getElementById('cashMovementSub').textContent = `Shift #${shift.id} — ${shift.cashier_name}`;
+
+    // Render banner immediately with placeholders for live data
+    banner.innerHTML = `
+      <div class="shift-banner open-state">
+        <div class="shift-banner-dot"></div>
+        <div class="shift-banner-info">
+          <div class="shift-banner-title">SHIFT #${shift.id} — ACTIVE</div>
+          <div class="shift-banner-meta">Opened by ${shift.cashier_name} · ${fmtDT(shift.opened_at)} · Running ${calcDuration(shift.opened_at, null)}</div>
+        </div>
+        <div class="shift-stats">
+          <div class="shift-stat">
+            <span class="shift-stat-val">${php(shift.opening_float)}</span>
+            <span class="shift-stat-lbl">Float In</span>
+          </div>
+          <div class="shift-stat">
+            <span class="shift-stat-val" id="bannerSales">…</span>
+            <span class="shift-stat-lbl">Sales</span>
+          </div>
+          <div class="shift-stat">
+            <span class="shift-stat-val" id="bannerOrders">…</span>
+            <span class="shift-stat-lbl">Orders</span>
+          </div>
+          <div class="shift-stat">
+            <span class="shift-stat-val" id="bannerDuration">${calcDuration(shift.opened_at, null)}</span>
+            <span class="shift-stat-lbl">Duration</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-left:12px">
+          <button class="btn btn-danger btn-sm" onclick="openCloseShiftModal()">🔴 Close Shift</button>
+        </div>
+      </div>
+    `;
+
+    // Fetch live sales silently — won't toast on failure
+    fetchLiveSales(shift.id);
+
+    // Auto-refresh duration every 60s
+    clearInterval(window._shiftDurationTimer);
+    window._shiftDurationTimer = setInterval(() => {
+      const durEl = document.getElementById('bannerDuration');
+      if (durEl) durEl.textContent = calcDuration(shift.opened_at, null);
+      else clearInterval(window._shiftDurationTimer);
+    }, 60000);
+
+    loadCashLog(shift.id);
+  } else {
+    // No open shift
+    moveCard.style.display = 'none';
+    banner.innerHTML = `
+      <div class="shift-banner closed-state" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px;width:100%">
+          <div class="shift-banner-dot"></div>
+          <div class="shift-banner-info">
+            <div class="shift-banner-title" style="color:var(--text-dark)">NO ACTIVE SHIFT</div>
+            <div class="shift-banner-meta">Start a new shift to begin tracking cash and sales.</div>
+          </div>
+          <button class="btn btn-success" onclick="openOpenShiftModal()" style="margin-left:auto">🟢 Open Shift</button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// ── CASH LOG (for current shift) ──────────────────────────────────
+async function loadCashLog(shiftId) {
+  const log  = await api('cash_log', 'GET', null, `&shift_id=${shiftId}`, true); // silent bg load
+  const body = document.getElementById('cashLogBody');
+  if (!log || !log.length) {
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">💵</div><p>No cash movements yet this shift</p></div>`;
+    return;
+  }
+  const typeLabel = { float_in:'Float In', sale:'Sale', cash_in:'Cash In', cash_out:'Cash Out', refund:'Refund', adjustment:'Adjustment' };
+  const typeBadge = { float_in:'badge-float', sale:'badge-sale', cash_in:'badge-in', cash_out:'badge-out', refund:'badge-refund', adjustment:'badge-adjust' };
+  const isNeg     = { cash_out: true, refund: true };
+  body.innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>Time</th><th>Type</th><th>Description</th><th>By</th><th style="text-align:right">Amount</th></tr></thead>
+      <tbody>
+        ${log.map(r => {
+          const neg = isNeg[r.type];
+          const amtClass = neg ? 'amount-negative' : r.type === 'adjustment' ? 'amount-neutral' : 'amount-positive';
+          return `<tr>
+            <td style="color:var(--text-light);font-size:12px;white-space:nowrap">${fmtDT(r.created_at)}</td>
+            <td><span class="badge ${typeBadge[r.type] || 'badge-float'}">${typeLabel[r.type] || r.type}</span></td>
+            <td>${r.description || '—'}</td>
+            <td style="color:var(--text-light)">${r.recorded_by}</td>
+            <td style="text-align:right"><span class="${amtClass}">${neg ? '−' : '+'}${php(r.amount)}</span></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// ── SHIFT HISTORY ─────────────────────────────────────────────────
+async function loadShiftHistory() {
+  const status = document.getElementById('historyFilter')?.value || '';
+  const extra  = status ? `&status=${status}` : '';
+  const data   = await api('list_shifts', 'GET', null, `&limit=60${extra}`, true); // silent bg load
+  const tbody  = document.getElementById('historyBody');
+  if (!data || !data.length) {
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:36px;color:var(--text-light)">No shifts recorded yet</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(s => {
+    const varV   = parseFloat(s.cash_variance) || 0;
+    const varCls = varV > 0 ? 'variance-positive' : varV < 0 ? 'variance-negative' : 'variance-zero';
+    // For open shifts total_sales is 0 in DB (set on close) — show placeholder, then hydrate live
+    const salesCell = s.status === 'open'
+      ? `<td style="color:#2E7D56;font-weight:700" id="hist-sales-${s.id}">⏳</td>`
+      : `<td style="color:#2E7D56;font-weight:700">${php(s.total_sales)}</td>`;
+    const ordersCell = s.status === 'open'
+      ? `<td style="text-align:center" id="hist-orders-${s.id}">—</td>`
+      : `<td style="text-align:center">${parseInt(s.total_orders) || 0}</td>`;
+    return `<tr>
+      <td class="mono">#${s.id}</td>
+      <td><strong>${s.cashier_name}</strong></td>
+      <td style="white-space:nowrap;font-size:12px">${fmtDT(s.opened_at)}</td>
+      <td style="white-space:nowrap;font-size:12px">${s.closed_at ? fmtDT(s.closed_at) : '—'}</td>
+      <td style="font-size:12px">${calcDuration(s.opened_at, s.closed_at)}</td>
+      <td>${php(s.opening_float)}</td>
+      ${salesCell}
+      ${ordersCell}
+      <td class="${varCls}">${s.cash_variance != null ? php(varV) : '—'}</td>
+      <td><span class="badge ${s.status === 'open' ? 'badge-open' : 'badge-closed'}">${s.status === 'open' ? '🟢 Open' : '⚫ Closed'}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="viewShiftDetail(${s.id})">Detail</button></td>
+    </tr>`;
+  }).join('');
+
+  // Hydrate live sales for any open shifts
+  const openShifts = data.filter(s => s.status === 'open');
+  for (const s of openShifts) {
+    const salesEl  = document.getElementById(`hist-sales-${s.id}`);
+    const ordersEl = document.getElementById(`hist-orders-${s.id}`);
+    if (!salesEl) continue;
+    // Use already-fetched live data if this is the current shift
+    if (currentShift && currentShift.id === s.id && currentShift._liveSales != null) {
+      salesEl.textContent  = php(currentShift._liveSales);
+      if (ordersEl) ordersEl.textContent = currentShift._liveOrders ?? '—';
+      continue;
+    }
+    // Otherwise fetch from shift_sales endpoint (silent — no api() wrapper needed)
+    try {
+      const res = await fetch(`${API}?action=shift_sales&shift_id=${s.id}`);
+      const d   = await res.json();
+      if (d && !d.error) {
+        salesEl.textContent  = php(d.total_sales);
+        if (ordersEl) ordersEl.textContent = d.total_orders ?? '—';
+      } else {
+        salesEl.textContent = php(0);
+      }
+    } catch(e) { salesEl.textContent = '—'; }
+  }
+}
+
+// ── POPULATE SHIFT FILTER (for cash log tab) ──────────────────────
+async function populateShiftFilter(forceRefresh = false) {
+  const data = await api('list_shifts', 'GET', null, '&limit=30', true); // silent
+  const sel  = document.getElementById('cashlogShiftFilter');
+  if (!data) return;
+  // Keep selected value if possible
+  const prev = sel.value;
+  // Clear old options except the placeholder
+  sel.innerHTML = '<option value="">Select Shift</option>';
+  data.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = `#${s.id} — ${s.cashier_name} (${fmtDT(s.opened_at)}) ${s.status === 'open' ? '🟢' : ''}`;
+    sel.appendChild(opt);
+  });
+  // Restore previous selection
+  if (prev) sel.value = prev;
+}
+
+async function loadCashLogByShift() {
+  const id = document.getElementById('cashlogShiftFilter').value;
+  if (!id) return;
+  const log  = await api('cash_log', 'GET', null, `&shift_id=${id}`);
+  const body = document.getElementById('cashlogBody');
+  if (!log || !log.length) {
+    body.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-light)">No entries for this shift</td></tr>`;
+    return;
+  }
+  const typeLabel = { float_in:'Float In', sale:'Sale', cash_in:'Cash In', cash_out:'Cash Out', refund:'Refund', adjustment:'Adjustment' };
+  const typeBadge = { float_in:'badge-float', sale:'badge-sale', cash_in:'badge-in', cash_out:'badge-out', refund:'badge-refund', adjustment:'badge-adjust' };
+  const isNeg = { cash_out: true, refund: true };
+  body.innerHTML = log.map(r => {
+    const neg = isNeg[r.type];
+    const amtCls = neg ? 'amount-negative' : r.type === 'adjustment' ? 'amount-neutral' : 'amount-positive';
+    return `<tr>
+      <td style="color:var(--text-light);font-size:12px;white-space:nowrap">${fmtDT(r.created_at)}</td>
+      <td><span class="badge ${typeBadge[r.type] || 'badge-float'}">${typeLabel[r.type] || r.type}</span></td>
+      <td>${r.description || '—'}</td>
+      <td style="color:var(--text-light)">${r.recorded_by}</td>
+      <td style="text-align:right"><span class="${amtCls}">${neg ? '−' : '+'}${php(r.amount)}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SHIFT DETAIL MODAL ────────────────────────────────────────────
+async function viewShiftDetail(id) {
+  openModal('shiftDetailModal');
+  const s = await api('get_shift', 'GET', null, `&id=${id}`);
+  const log = await api('cash_log', 'GET', null, `&shift_id=${id}`);
+  document.getElementById('sdTitle').textContent = `Shift #${id} — ${s?.cashier_name || ''}`;
+  if (!s) { document.getElementById('sdBody').innerHTML = '<p style="color:var(--text-light)">Error loading shift</p>'; return; }
+
+  const varV   = parseFloat(s.cash_variance) || 0;
+  const varCls = varV > 0 ? 'variance-positive' : varV < 0 ? 'variance-negative' : 'variance-zero';
+  const typeLabel = { float_in:'Float In', sale:'Sale', cash_in:'Cash In', cash_out:'Cash Out', refund:'Refund', adjustment:'Adjustment' };
+  const typeBadge = { float_in:'badge-float', sale:'badge-sale', cash_in:'badge-in', cash_out:'badge-out', refund:'badge-refund', adjustment:'badge-adjust' };
+  const isNeg = { cash_out: true, refund: true };
+
+  document.getElementById('sdBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--bg-main);border-radius:10px;padding:12px 14px;font-size:13px">
+        <div style="color:var(--text-light);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Shift Info</div>
+        <div style="margin-bottom:4px"><span style="color:var(--text-light)">Cashier:</span> <strong>${s.cashier_name}</strong></div>
+        <div style="margin-bottom:4px"><span style="color:var(--text-light)">Status:</span> <span class="badge ${s.status === 'open' ? 'badge-open' : 'badge-closed'}">${s.status}</span></div>
+        <div style="margin-bottom:4px"><span style="color:var(--text-light)">Opened:</span> ${fmtDT(s.opened_at)}</div>
+        <div><span style="color:var(--text-light)">Closed:</span> ${s.closed_at ? fmtDT(s.closed_at) : '—'}</div>
+      </div>
+      <div style="background:var(--bg-main);border-radius:10px;padding:12px 14px;font-size:13px">
+        <div style="color:var(--text-light);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Cash Summary</div>
+        <div style="margin-bottom:4px"><span style="color:var(--text-light)">Opening Float:</span> <strong>${php(s.opening_float)}</strong></div>
+        <div style="margin-bottom:4px"><span style="color:var(--text-light)">Total Sales:</span> <strong style="color:#2E7D56">${php(s.total_sales)}</strong></div>
+        <div style="margin-bottom:4px"><span style="color:var(--text-light)">Expected:</span> <strong>${s.expected_cash != null ? php(s.expected_cash) : '—'}</strong></div>
+        <div style="margin-bottom:4px"><span style="color:var(--text-light)">Closing Float:</span> <strong>${s.closing_float != null ? php(s.closing_float) : '—'}</strong></div>
+        <div><span style="color:var(--text-light)">Variance:</span> <strong class="${varCls}">${s.cash_variance != null ? php(varV) : '—'}</strong></div>
+      </div>
+    </div>
+    ${s.notes ? `<div style="background:var(--bg-main);border-radius:10px;padding:12px 14px;font-size:13px"><span style="color:var(--text-light)">Notes:</span> ${s.notes}</div>` : ''}
+    <div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-light);margin-bottom:8px">Cash Movements (${log?.length || 0})</div>
+      ${!log || !log.length ? '<p style="color:var(--text-light);font-size:13px">No cash movements</p>' : `
+        <table class="data-table" style="font-size:12px">
+          <thead><tr><th>Time</th><th>Type</th><th>Description</th><th style="text-align:right">Amount</th></tr></thead>
+          <tbody>
+            ${log.map(r => {
+              const neg = isNeg[r.type];
+              return `<tr>
+                <td style="white-space:nowrap;color:var(--text-light)">${fmtDT(r.created_at)}</td>
+                <td><span class="badge ${typeBadge[r.type] || ''}">${typeLabel[r.type] || r.type}</span></td>
+                <td>${r.description || '—'}</td>
+                <td style="text-align:right;font-weight:700;color:${neg ? '#B91C1C' : '#2E7D56'}">${neg ? '−' : '+'}${php(r.amount)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      `}
+    </div>
+  `;
+}
+
+// ── OPEN SHIFT MODAL ──────────────────────────────────────────────
+function openOpenShiftModal() {
+  document.getElementById('os_cashierName').value = currentUser?.full_name || '';
+  document.getElementById('os_float').value = '';
+  document.getElementById('os_notes').value = '';
+  openModal('openShiftModal');
+}
+
+async function doOpenShift() {
+  const float = parseFloat(document.getElementById('os_float').value) || 0;
+  const notes = document.getElementById('os_notes').value.trim();
+  const res = await api('open_shift', 'POST', {
+    cashier_id:    currentUser?.id || 0,
+    cashier_name:  currentUser?.full_name || 'Staff',
+    opening_float: float,
+    notes
+  });
+  if (res?.success) {
+    toast('Shift opened successfully!');
+    closeModal('openShiftModal');
+    await loadKPIs();
+    await loadCurrentShift();
+    await loadShiftHistory();
+    await populateShiftFilter(true); // force refresh
+  }
+}
+
+// ── CLOSE SHIFT MODAL ─────────────────────────────────────────────
+async function openCloseShiftModal() {
+  if (!currentShift) return;
+
+  document.getElementById('cs_openedAt').textContent     = fmtDT(currentShift.opened_at);
+  document.getElementById('cs_totalSales').textContent   = '⏳ Loading…';
+  document.getElementById('cs_expectedCash').textContent = '⏳ Loading…';
+  document.getElementById('cs_closingFloat').value = '';
+  document.getElementById('cs_notes').value = '';
+  document.getElementById('varianceBox').style.display = 'none';
+  openModal('closeShiftModal');
+
+  // Use the same dual-fallback fetch (shift_sales → orders list → zeros)
+  const live = await fetchLiveSales(currentShift.id);
+
+  // _liveSales and _expectedCash are set inside fetchLiveSales
+  const liveSales    = currentShift._liveSales    ?? 0;
+  const expectedCash = currentShift._expectedCash ?? parseFloat(currentShift.opening_float);
+
+  document.getElementById('cs_totalSales').textContent   = php(liveSales);
+  document.getElementById('cs_expectedCash').textContent = php(expectedCash);
+
+  if (document.getElementById('cs_closingFloat').value) updateVariance();
+}
+
+function updateVariance() {
+  const closing  = parseFloat(document.getElementById('cs_closingFloat').value) || 0;
+  // Use the live expected cash fetched from DB; fall back to float-only if not yet loaded
+  const expected = currentShift?._expectedCash ?? parseFloat(currentShift?.opening_float ?? 0);
+  const variance = closing - expected;
+  const box = document.getElementById('varianceBox');
+  box.style.display = 'block';
+  if (variance > 0) {
+    box.style.background = 'rgba(76,175,125,0.1)'; box.style.color = '#2E7D56';
+    box.style.border = '1px solid rgba(76,175,125,0.25)';
+    box.textContent = `▲ Overage: ${php(variance)} (more cash than expected)`;
+  } else if (variance < 0) {
+    box.style.background = 'rgba(220,38,38,0.08)'; box.style.color = '#B91C1C';
+    box.style.border = '1px solid rgba(220,38,38,0.2)';
+    box.textContent = `▼ Shortage: ${php(Math.abs(variance))} (less cash than expected)`;
+  } else {
+    box.style.background = 'rgba(200,169,110,0.08)'; box.style.color = 'var(--text-mid)';
+    box.style.border = '1px solid rgba(200,169,110,0.2)';
+    box.textContent = `✓ Cash balanced — no variance`;
+  }
+}
+
+async function doCloseShift() {
+  const closing = parseFloat(document.getElementById('cs_closingFloat').value);
+  if (isNaN(closing) || closing < 0) { toast('Enter a valid closing float amount', 'error'); return; }
+  const notes = document.getElementById('cs_notes').value.trim();
+  const res = await api('close_shift', 'POST', { shift_id: currentShift.id, closing_float: closing, notes });
+  if (res?.success) {
+    const varV = parseFloat(res.cash_variance) || 0;
+    const msg  = varV !== 0 ? ` | Variance: ${php(varV)}` : ' | Cash balanced ✓';
+    toast(`Shift closed! Sales: ${php(res.total_sales)}${msg}`);
+    closeModal('closeShiftModal');
+    currentShift = null;
+    await loadKPIs();
+    await loadCurrentShift();
+    await loadShiftHistory();
+    await populateShiftFilter(true); // force refresh
+  }
+}
+
+// ── CASH MOVEMENT MODAL ───────────────────────────────────────────
+function openCashMoveModal(type) {
+  if (!currentShift) { toast('No active shift. Open a shift first.', 'error'); return; }
+  document.getElementById('cm_type').value  = type;
+  document.getElementById('cm_amount').value = '';
+  document.getElementById('cm_desc').value   = '';
+  const labels = { cash_in:'💚 Record Cash In', cash_out:'🔴 Record Cash Out', adjustment:'⚖ Record Adjustment', refund:'↩ Record Refund' };
+  document.getElementById('cashMoveTitle').textContent = labels[type] || '💵 Record Cash Movement';
+  openModal('cashMoveModal');
+}
+
+async function doCashMove() {
+  const type   = document.getElementById('cm_type').value;
+  const amount = parseFloat(document.getElementById('cm_amount').value);
+  const desc   = document.getElementById('cm_desc').value.trim();
+  if (!amount || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+  const res = await api('add_cash_movement', 'POST', {
+    shift_id:    currentShift.id,
+    type, amount, description: desc,
+    recorded_by: currentUser?.full_name || 'Staff'
+  });
+  if (res?.success) {
+    toast('Cash movement recorded!');
+    closeModal('cashMoveModal');
+    loadCashLog(currentShift.id);
+  }
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── REFRESH ALL ───────────────────────────────────────────────────
+async function refreshAll() {
+  await loadKPIs();
+  await loadCurrentShift();
+  await loadShiftHistory();
+  await populateShiftFilter(true);
+  toast('Refreshed!');
+}
+</script>
+</body>
+</html>
